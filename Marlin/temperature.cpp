@@ -1038,6 +1038,10 @@ void Temperature::init() {
   #if HAS_TEMP_BED
     ANALOG_SELECT(TEMP_BED_PIN);
   #endif
+  // Modified by Phisik
+  #if ENABLED(ADC_KEYPAD)
+      ANALOG_SELECT(ADC_KEYPAD_PIN);
+  #endif
   #if ENABLED(FILAMENT_WIDTH_SENSOR)
     ANALOG_SELECT(FILWIDTH_PIN);
   #endif
@@ -1488,6 +1492,7 @@ void Temperature::set_current_temp_raw() {
  */
 ISR(TIMER0_COMPB_vect) { Temperature::isr(); }
 
+
 void Temperature::isr() {
   //Allow UART and stepper ISRs
   CBI(TIMSK0, OCIE0B); //Disable Temperature ISR
@@ -1496,6 +1501,10 @@ void Temperature::isr() {
   static uint8_t temp_count = 0;
   static TempState temp_state = StartupDelay;
   static uint8_t pwm_count = _BV(SOFT_PWM_SCALE);
+
+  #if ENABLED(ADC_KEYPAD)
+    static unsigned int raw_ADCKey_value = 0;  
+  #endif
 
   // Static members for each heater
   #if ENABLED(SLOW_PWM_HEATERS)
@@ -1750,6 +1759,10 @@ void Temperature::isr() {
       #if HAS_TEMP_0
         START_ADC(TEMP_0_PIN);
       #endif
+      // Modified by Phisik
+      #if DISABLED(ADC_KEYPAD)
+        lcd_buttons_update();
+      #endif        
       lcd_buttons_update();
       temp_state = MeasureTemp_0;
       break;
@@ -1764,6 +1777,10 @@ void Temperature::isr() {
       #if HAS_TEMP_BED
         START_ADC(TEMP_BED_PIN);
       #endif
+      // Modified by Phisik
+      #if DISABLED(ADC_KEYPAD)
+        lcd_buttons_update();
+      #endif        
       lcd_buttons_update();
       temp_state = MeasureTemp_BED;
       break;
@@ -1777,6 +1794,10 @@ void Temperature::isr() {
     case PrepareTemp_1:
       #if HAS_TEMP_1
         START_ADC(TEMP_1_PIN);
+      #endif
+      // Modified by Phisik
+      #if DISABLED(ADC_KEYPAD)
+        lcd_buttons_update();
       #endif
       lcd_buttons_update();
       temp_state = MeasureTemp_1;
@@ -1792,6 +1813,10 @@ void Temperature::isr() {
       #if HAS_TEMP_2
         START_ADC(TEMP_2_PIN);
       #endif
+      // Modified by Phisik
+      #if DISABLED(ADC_KEYPAD)
+        lcd_buttons_update();
+      #endif
       lcd_buttons_update();
       temp_state = MeasureTemp_2;
       break;
@@ -1806,6 +1831,10 @@ void Temperature::isr() {
       #if HAS_TEMP_3
         START_ADC(TEMP_3_PIN);
       #endif
+      // Modified by Phisik
+      #if DISABLED(ADC_KEYPAD)
+        lcd_buttons_update();
+      #endif        
       lcd_buttons_update();
       temp_state = MeasureTemp_3;
       break;
@@ -1820,9 +1849,15 @@ void Temperature::isr() {
       #if ENABLED(FILAMENT_WIDTH_SENSOR)
         START_ADC(FILWIDTH_PIN);
       #endif
+      // Modified by Phisik
+      #if DISABLED(ADC_KEYPAD)
+        lcd_buttons_update();
+      #endif        
       lcd_buttons_update();
       temp_state = Measure_FILWIDTH;
       break;
+// Modified by Phisik
+#if DISABLED(ADC_KEYPAD)
     case Measure_FILWIDTH:
       #if ENABLED(FILAMENT_WIDTH_SENSOR)
         // raw_filwidth_value += ADC;  //remove to use an IIR filter approach
@@ -1834,6 +1869,41 @@ void Temperature::isr() {
       temp_state = PrepareTemp_0;
       temp_count++;
       break;
+#else
+    case Measure_FILWIDTH:
+      #if ENABLED(FILAMENT_WIDTH_SENSOR)
+        // raw_filwidth_value += ADC;  //remove to use an IIR filter approach
+        if (ADC > 102) { //check that ADC is reading a voltage > 0.5 volts, otherwise don't take in the data.
+          raw_filwidth_value -= (raw_filwidth_value >> 7); //multiply raw_filwidth_value by 127/128
+          raw_filwidth_value += ((unsigned long)ADC << 7); //add new ADC reading
+        }
+      #endif
+      temp_state = PrepareADC;
+      break;      
+      case PrepareADC:
+        #if ENABLED(ADC_KEYPAD_PIN) && (ADC_KEYPAD_PIN > -1)
+          START_ADC(ADC_KEYPAD_PIN);
+        #endif
+        temp_state = MeasureADC;
+        break;
+      case MeasureADC:
+        if(ADCKey_count < ADC_KEYPAD_LATENCY) { 
+          #if ENABLED(ADC_KEYPAD_PIN) && (ADC_KEYPAD_PIN > -1)
+            raw_ADCKey_value = ADC;
+          #endif
+          if(raw_ADCKey_value > 900) {
+            //ADC Key release
+            ADCKey_count = 0;
+            current_ADCKey_raw = 0;
+          } else {
+            current_ADCKey_raw += raw_ADCKey_value;
+            ADCKey_count++;
+          }
+        }
+      temp_state = PrepareTemp_0;
+      temp_count++;
+      break;
+#endif
 
     case StartupDelay:
       temp_state = PrepareTemp_0;

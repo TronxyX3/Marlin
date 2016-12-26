@@ -25,6 +25,13 @@
 
 #include "Marlin.h"
 
+#ifdef ADC_KEYPAD
+  unsigned char get_ADC_keyValue(void);
+  extern unsigned int current_ADCKey_raw;
+  extern unsigned char ADCKey_count;
+#endif
+
+
 #if ENABLED(ULTRA_LCD)
 
   #define BUTTON_EXISTS(BN) (defined(BTN_## BN) && BTN_## BN >= 0)
@@ -69,7 +76,7 @@
   #define LCD_ALERTMESSAGEPGM(x) lcd_setalertstatuspgm(PSTR(x))
 
   #define LCD_UPDATE_INTERVAL 100
-  #define LCD_TIMEOUT_TO_STATUS 15000
+  #define LCD_TIMEOUT_TO_STATUS 30000
 
   #if ENABLED(ULTIPANEL)
 
@@ -145,7 +152,14 @@
                                               EN_REPRAPWORLD_KEYPAD_LEFT) \
                                             )
 
-    #define LCD_CLICKED ((buttons & EN_C) || (buttons_reprapworld_keypad & EN_REPRAPWORLD_KEYPAD_F1))
+      #ifdef ADC_KEYPAD
+          #define LCD_CLICKED (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_RIGHT)
+          #define LCD_OPEN_MENU (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_MIDDLE)
+          #define LCD_MENU_BACK (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_LEFT) 
+      #else
+          #define LCD_CLICKED ((buttons & EN_C) || (buttons_reprapworld_keypad & EN_REPRAPWORLD_KEYPAD_F1))
+      #endif
+
   #elif ENABLED(NEWPANEL)
     #define LCD_CLICKED (buttons & EN_C)
   #else
