@@ -38,7 +38,7 @@
 
 #define Z_STEP_PIN          3
 #define Z_DIR_PIN           2
-//#define Z_STOP_PIN        20  // Z_MIN_PIN
+#define Z_STOP_PIN        20  // Z_MIN_PIN
 
 // Modified by lom for Zonestar 3d printer
 // We need Z_MAX endstop from proper functioning of auto-bed-leveling
@@ -55,9 +55,9 @@
 #define FAN_PIN            -1
 
 #if MB(AZTEEG_X1) || MB(STB_11) || MB(MELZI)
-  #define FAN_PIN           4 // Works for Panelolu2 too
+  #define FAN_PIN           -1 // Works for Panelolu2 too
   #if MB(MELZI)
-    #define LED_PIN        27 // On some broken versions of the Sanguino libraries the pin definitions are wrong, so LED_PIN needs to be 28. But you should upgrade your Sanguino libraries! See #368.
+    #define LED_PIN        -1 // On some broken versions of the Sanguino libraries the pin definitions are wrong, so LED_PIN needs to be 28. But you should upgrade your Sanguino libraries! See #368.
   #elif MB(STB_11)
     #define LCD_PIN_BL     17 // LCD backlight LED
   #endif
