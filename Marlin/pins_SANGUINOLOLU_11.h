@@ -38,7 +38,15 @@
 
 #define Z_STEP_PIN          3
 #define Z_DIR_PIN           2
-#define Z_STOP_PIN         20
+//#define Z_STOP_PIN        20  // Z_MIN_PIN
+
+// Modified by lom for Zonestar 3d printer
+// We need Z_MAX endstop from proper functioning of auto-bed-leveling
+// Simplest way is to connect optical endtop to Z_MIN_ENDSTOP
+// Endstop must be connected to +5V to prevent logic burn-out
+
+#define Z_MIN_PIN    20  
+#define Z_MAX_PIN    -1
 
 #define E0_STEP_PIN         1
 #define E0_DIR_PIN          0
@@ -93,7 +101,7 @@
 #define TEMP_2_PIN         -1
 #define TEMP_BED_PIN        6   // MUST USE ANALOG INPUT NUMBERING NOT DIGITAL OUTPUT NUMBERING!!!!!!!!! (pin 34 bed)
 #define SDPOWER            -1
-#define SDSS               31
+#define SDSS                31
 
 /**
  * On some broken versions of the Sanguino libraries the pin definitions are wrong,
@@ -101,7 +109,25 @@
  */
 //#define SDSS               24
 
-#if ENABLED(ULTRA_LCD) && ENABLED(NEWPANEL)
+// Zonestar LCD support
+#if ENABLED(ULTRA_LCD) && ENABLED(ADC_KEYPAD)
+    // No buzzer installed
+    #define BEEPER_PIN -1
+    #define SD_DETECT_PIN         -1
+    // #define LCD_CONTRAST      1
+  
+    #define LCD_PINS_RS       28//A3
+    #define LCD_PINS_ENABLE   29//A2
+    #define LCD_PINS_D4       10
+    #define LCD_PINS_D5       11
+    #define LCD_PINS_D6       16
+    #define LCD_PINS_D7       17
+    
+    #define ADC_KEYPAD_PIN     1  // MUST USE ANALOG INPUT NUMBERING NOT DIGITAL OUTPUT NUMBERING!!!!!!!!! 
+   
+#endif //ADC_KEYPAD
+
+#if ENABLED(ULTRA_LCD) && ENABLED(NEWPANEL) && DISABLED(ADC_KEYPAD)
 
   // No buzzer installed
   #define BEEPER_PIN -1

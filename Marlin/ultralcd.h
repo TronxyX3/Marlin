@@ -25,6 +25,12 @@
 
 #include "Marlin.h"
 
+#ifdef ADC_KEYPAD
+  unsigned char get_ADC_keyValue(void);
+  extern unsigned int current_ADCKey_raw;
+  extern unsigned char ADCKey_count;
+#endif
+
 #if ENABLED(ULTRA_LCD)
 
   #include "buzzer.h"
@@ -60,7 +66,7 @@
   #define LCD_ALERTMESSAGEPGM(x) lcd_setalertstatuspgm(PSTR(x))
 
   #define LCD_UPDATE_INTERVAL 100
-  #define LCD_TIMEOUT_TO_STATUS 15000
+  #define LCD_TIMEOUT_TO_STATUS 30000
 
   #if ENABLED(ULTIPANEL)
     void lcd_buttons_update();
@@ -104,7 +110,13 @@
       #define EN_REPRAPWORLD_KEYPAD_DOWN (_BV(BLEN_REPRAPWORLD_KEYPAD_DOWN))
       #define EN_REPRAPWORLD_KEYPAD_LEFT (_BV(BLEN_REPRAPWORLD_KEYPAD_LEFT))
 
-      #define LCD_CLICKED ((buttons&EN_C) || (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_F1))
+      #ifdef ADC_KEYPAD
+          #define LCD_CLICKED (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_RIGHT)
+          #define LCD_OPEN_MENU (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_MIDDLE)
+          #define LCD_MENU_BACK (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_LEFT) 
+      #else
+          #define LCD_CLICKED ((buttons&EN_C) || (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_F1))
+      #endif
       #define REPRAPWORLD_KEYPAD_MOVE_Z_UP (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_F2)
       #define REPRAPWORLD_KEYPAD_MOVE_Z_DOWN (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_F3)
       #define REPRAPWORLD_KEYPAD_MOVE_X_LEFT (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_LEFT)

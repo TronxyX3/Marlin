@@ -1093,8 +1093,13 @@ long code_value_long() { return strtol(seen_pointer + 1, NULL, 10); }
 
 int16_t code_value_short() { return (int16_t)strtol(seen_pointer + 1, NULL, 10); }
 
+// Modified by Phisik to support lowercase commands
+// I appreciate following G-code standarts,
+// but difference between G28 and g28 is frustrating...
+// (see https://github.com/MarlinFirmware/Marlin/issues/2393)
 bool code_seen(char code) {
   seen_pointer = strchr(current_command_args, code);
+  if (seen_pointer == NULL) seen_pointer = strchr(current_command_args, code + ('a'-'A'));
   return (seen_pointer != NULL); // Return TRUE if the code-letter was found
 }
 
@@ -2696,9 +2701,19 @@ inline void gcode_G28() {
                * within the bed!
                */
               float cpx = current_position[X_AXIS], cpy = current_position[Y_AXIS];
-              if (   cpx >= X_MIN_POS - (X_PROBE_OFFSET_FROM_EXTRUDER)
+
+//              if (   cpx >= X_MIN_POS - (X_PROBE_OFFSET_FROM_EXTRUDER)
+//                && cpx <= X_MAX_POS - (X_PROBE_OFFSET_FROM_EXTRUDER)
+//                  && cpy >= Y_MIN_POS - (Y_PROBE_OFFSET_FROM_EXTRUDER)
+//                  && cpy <= Y_MAX_POS - (Y_PROBE_OFFSET_FROM_EXTRUDER)) {
+
+                // Modified by lom
+                // If XY_MIN is negative probe will be outside the bed
+                // Just let's take max(XY_MIN, 0) for higher safety
+
+                if (   cpx >= max(X_MIN_POS,0) - (X_PROBE_OFFSET_FROM_EXTRUDER)
                   && cpx <= X_MAX_POS - (X_PROBE_OFFSET_FROM_EXTRUDER)
-                  && cpy >= Y_MIN_POS - (Y_PROBE_OFFSET_FROM_EXTRUDER)
+                  && cpy >= max(Y_MIN_POS, 0) - (Y_PROBE_OFFSET_FROM_EXTRUDER)
                   && cpy <= Y_MAX_POS - (Y_PROBE_OFFSET_FROM_EXTRUDER)) {
 
                 // Home the Z axis
@@ -4350,36 +4365,30 @@ inline void gcode_M110() {
 inline void gcode_M111() {
   marlin_debug_flags = code_seen('S') ? code_value_short() : DEBUG_NONE;
 
-  const char str_debug_1[] PROGMEM = MSG_DEBUG_ECHO;
-  const char str_debug_2[] PROGMEM = MSG_DEBUG_INFO;
-  const char str_debug_4[] PROGMEM = MSG_DEBUG_ERRORS;
-  const char str_debug_8[] PROGMEM = MSG_DEBUG_DRYRUN;
-  const char str_debug_16[] PROGMEM = MSG_DEBUG_COMMUNICATION;
-  #if ENABLED(DEBUG_LEVELING_FEATURE)
-    const char str_debug_32[] PROGMEM = MSG_DEBUG_LEVELING;
-  #endif
-
-  const char* const debug_strings[] PROGMEM = {
-    str_debug_1, str_debug_2, str_debug_4, str_debug_8, str_debug_16,
-    #if ENABLED(DEBUG_LEVELING_FEATURE)
-      str_debug_32
-    #endif
-  };
+  bool bConcatenate = false;
 
   SERIAL_ECHO_START;
   SERIAL_ECHOPGM(MSG_DEBUG_PREFIX);
-  if (marlin_debug_flags) {
-    uint8_t comma = 0;
-    for (uint8_t i = 0; i < COUNT(debug_strings); i++) {
-      if (TEST(marlin_debug_flags, i)) {
-        if (comma++) SERIAL_CHAR('|');
-        serialprintPGM(debug_strings[i]);
-      }
-    }
-  }
-  else {
+
+  if (!marlin_debug_flags)
     SERIAL_ECHOPGM(MSG_DEBUG_OFF);
-  }
+  else
+      for (uint8_t i = 0; i < 8; i++) {    // Assuming 8 is sizeof(uint8_t marlin_debug_flags)
+          if(TEST(marlin_debug_flags, i)) {
+            if(bConcatenate)  SERIAL_ECHOPGM("|");
+            switch(i){
+                case 0: SERIAL_ECHOPGM(MSG_DEBUG_ECHO); break;
+                case 1: SERIAL_ECHOPGM(MSG_DEBUG_INFO); break;
+                case 2: SERIAL_ECHOPGM(MSG_DEBUG_ERRORS); break;
+                case 3: SERIAL_ECHOPGM(MSG_DEBUG_DRYRUN); break;
+                case 4: SERIAL_ECHOPGM(MSG_DEBUG_COMMUNICATION); break;
+                #if ENABLED(DEBUG_LEVELING_FEATURE)
+                    case 5: SERIAL_ECHOPGM(MSG_DEBUG_LEVELING); break;
+                #endif
+            }
+            bConcatenate = true; 
+          }
+      }
   SERIAL_EOL;
 }
 
@@ -6129,7 +6138,7 @@ void process_next_command() {
 
   // Handle a known G, M, or T
   switch (command_code) {
-    case 'G': switch (codenum) {
+    case 'G': case 'g': switch (codenum) {
 
       // G0, G1
       case 0:
@@ -6201,7 +6210,7 @@ void process_next_command() {
     }
     break;
 
-    case 'M': switch (codenum) {
+    case 'M': case 'm': switch (codenum) {
       #if ENABLED(ULTIPANEL)
         case 0: // M0 - Unconditional stop - Wait for user button press on LCD
         case 1: // M1 - Conditional stop - Wait for user button press on LCD
@@ -6656,7 +6665,7 @@ void process_next_command() {
     }
     break;
 
-    case 'T':
+    case 'T': 
       gcode_T(codenum);
       break;
 
