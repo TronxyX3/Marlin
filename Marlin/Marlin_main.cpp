@@ -44,6 +44,7 @@
 #include "cardreader.h"
 #include "watchdog.h"
 #include "ConfigurationStore.h"
+#include "Configuration.h"
 #include "language.h"
 #include "pins_arduino.h"
 #include "math.h"
@@ -473,6 +474,9 @@ void setup()
   setup_killpin();
   setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
+
+  lcd_init();
+  
   SERIAL_PROTOCOLLNPGM("start");
   SERIAL_ECHO_START;
 
@@ -518,9 +522,10 @@ void setup()
   setup_photpin();
   servo_init();
 
-  lcd_init();
+  #ifndef DISPLAY_START_PAGE
   _delay_ms(1000);	// wait 1sec to display the splash screen
-
+  #endif
+  
   #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
     SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
   #endif
@@ -528,8 +533,11 @@ void setup()
   #ifdef DIGIPOT_I2C
     digipot_i2c_init();
   #endif
+
+ 
 }
 
+extern unsigned short currentkpADCValue;
 
 void loop()
 {
@@ -906,9 +914,7 @@ static void set_bed_level_equation_3pts(float z_at_pt_1, float z_at_pt_2, float 
     current_position[Z_AXIS] = zprobe_zoffset;
 
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-
 }
-
 #endif // AUTO_BED_LEVELING_GRID
 
 static void run_z_probe() {
@@ -1620,7 +1626,7 @@ void process_commands()
         if(code_seen(axis_codes[i])) {
            if(i == E_AXIS) {
              current_position[i] = code_value();
-             plan_set_e_position(current_position[E_AXIS]);
+             plan_set_e_position(current_position[E_AXIS]);			 
            }
            else {
              current_position[i] = code_value()+add_homeing[i];

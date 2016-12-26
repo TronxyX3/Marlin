@@ -42,6 +42,12 @@ int target_temperature_bed = 0;
 int current_temperature_raw[EXTRUDERS] = { 0 };
 float current_temperature[EXTRUDERS] = { 0.0 };
 int current_temperature_bed_raw = 0;
+
+#ifdef ADC_KEYPAD
+unsigned int current_ADCKey_raw = 0;
+unsigned char ADCKey_count = 0;
+#endif
+
 float current_temperature_bed = 0.0;
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   int redundant_temperature_raw = 0;
@@ -67,7 +73,8 @@ float current_temperature_bed = 0.0;
 #endif
 
 unsigned char soft_pwm_bed;
-  
+
+
 #ifdef BABYSTEPPING
   volatile int babystepsTodo[3]={0,0,0};
 #endif
@@ -701,6 +708,11 @@ void tp_init()
   MCUCR=(1<<JTD); 
   MCUCR=(1<<JTD);
 #endif
+
+	#ifdef CASE_LIGHT_PIN
+	SET_OUTPUT(CASE_LIGHT_PIN);
+	WRITE(CASE_LIGHT_PIN,HIGH);
+	#endif
   
   // Finish init of mult extruder arrays 
   for(int e = 0; e < EXTRUDERS; e++) {
@@ -1041,7 +1053,12 @@ ISR(TIMER0_COMPB_vect)
   static unsigned long raw_temp_1_value = 0;
   static unsigned long raw_temp_2_value = 0;
   static unsigned long raw_temp_bed_value = 0;
+#ifdef ADC_KEYPAD
+  static unsigned int raw_ADCKey_value = 0;  
+  static unsigned char temp_state = 10;
+#else
   static unsigned char temp_state = 8;
+#endif
   static unsigned char pwm_count = (1 << SOFT_PWM_SCALE);
   static unsigned char soft_pwm_0;
   #if (EXTRUDERS > 1) || defined(HEATERS_PARALLEL)
@@ -1113,9 +1130,12 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_0_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+	  #ifndef ADC_KEYPAD
       lcd_buttons_update();
+	  #endif
       temp_state = 1;
       break;
+	  
     case 1: // Measure TEMP_0
       #if defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
         raw_temp_0_value += ADC;
@@ -1125,6 +1145,7 @@ ISR(TIMER0_COMPB_vect)
       #endif
       temp_state = 2;
       break;
+	  
     case 2: // Prepare TEMP_BED
       #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
         #if TEMP_BED_PIN > 7
@@ -1135,15 +1156,19 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_BED_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+	  #ifndef ADC_KEYPAD
       lcd_buttons_update();
+	  #endif
       temp_state = 3;
       break;
+	  
     case 3: // Measure TEMP_BED
       #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
         raw_temp_bed_value += ADC;
       #endif
       temp_state = 4;
       break;
+	  
     case 4: // Prepare TEMP_1
       #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1)
         #if TEMP_1_PIN > 7
@@ -1154,15 +1179,19 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_1_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+	  #ifndef ADC_KEYPAD
       lcd_buttons_update();
+	  #endif
       temp_state = 5;
       break;
+	  
     case 5: // Measure TEMP_1
       #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1)
         raw_temp_1_value += ADC;
       #endif
       temp_state = 6;
       break;
+	  
     case 6: // Prepare TEMP_2
       #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
         #if TEMP_2_PIN > 7
@@ -1173,19 +1202,75 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_2_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+	  #ifndef ADC_KEYPAD
       lcd_buttons_update();
+	  #endif
       temp_state = 7;
       break;
-    case 7: // Measure TEMP_2
+
+#ifdef ADC_KEYPAD
+	  case 7: // Measure TEMP_2
+      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
+        raw_temp_2_value += ADC;
+      #endif
+      temp_state = 8;
+      break;
+	  
+	case 8: // Prepare ADC_KEY
+      #if defined(PINS_ADC_KEY) && (PINS_ADC_KEY > -1)
+        #if PINS_ADC_KEY > 7
+          ADCSRB = 1<<MUX5;
+        #else
+          ADCSRB = 0;
+        #endif
+        ADMUX = ((1 << REFS0) | (PINS_ADC_KEY & 0x07));
+        ADCSRA |= 1<<ADSC; // Start conversion
+      #endif
+	  #ifndef ADC_KEYPAD
+      lcd_buttons_update();
+	  #endif
+      temp_state = 9;
+      break;
+	  
+    case 9: // Measure ADC_KEY
+      if(ADCKey_count < 16)
+      {
+      	#if defined(PINS_ADC_KEY) && (PINS_ADC_KEY > -1)
+        	raw_ADCKey_value = ADC;
+      	#endif
+		    if(raw_ADCKey_value > 900)
+			{
+				//ADC Key release
+				ADCKey_count = 0;
+				current_ADCKey_raw = 0;
+			}
+			else 
+			{
+				current_ADCKey_raw += raw_ADCKey_value;
+				ADCKey_count++;
+			}
+      }
+	  temp_state = 0;
+      temp_count++;
+      break;
+
+	case 10: //Startup, delay initial temp reading a tiny bit so the hardware can settle.
+      temp_state = 0;
+      break;
+#else
+	 case 7: // Measure TEMP_2
       #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
         raw_temp_2_value += ADC;
       #endif
       temp_state = 0;
       temp_count++;
       break;
+	  
     case 8: //Startup, delay initial temp reading a tiny bit so the hardware can settle.
       temp_state = 0;
       break;
+#endif
+
 //    default:
 //      SERIAL_ERROR_START;
 //      SERIAL_ERRORLNPGM("Temp measurement error!");
@@ -1215,7 +1300,7 @@ ISR(TIMER0_COMPB_vect)
     raw_temp_1_value = 0;
     raw_temp_2_value = 0;
     raw_temp_bed_value = 0;
-
+	
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
     if(current_temperature_raw[0] <= maxttemp_raw[0]) {
 #else
@@ -1274,7 +1359,7 @@ ISR(TIMER0_COMPB_vect)
        bed_max_temp_error();
     }
 #endif
-  }
+  }// if(temp_count >= OVERSAMPLENR)
   
 #ifdef BABYSTEPPING
   for(uint8_t axis=0;axis<3;axis++)
@@ -1321,5 +1406,4 @@ float unscalePID_d(float d)
 }
 
 #endif //PIDTEMP
-
 

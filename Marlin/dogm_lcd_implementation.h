@@ -20,6 +20,9 @@
 **/
 
 #ifdef ULTIPANEL
+#ifdef ADC_KEYPAD
+
+#else
 #define BLEN_A 0
 #define BLEN_B 1
 #define BLEN_C 2
@@ -31,6 +34,7 @@
 #define encrot2 3
 #define encrot3 1
 #define LCD_CLICKED (buttons&EN_C)
+#endif
 #endif
 
 #include <U8glib.h>

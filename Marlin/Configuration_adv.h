@@ -47,23 +47,23 @@
 //  extruder run-out prevention.
 //if the machine is idle, and the temperature over MINTEMP, every couple of SECONDS some filament is extruded
 //#define EXTRUDER_RUNOUT_PREVENT
-#define EXTRUDER_RUNOUT_MINTEMP 190
-#define EXTRUDER_RUNOUT_SECONDS 30.
-#define EXTRUDER_RUNOUT_ESTEPS 14. //mm filament
-#define EXTRUDER_RUNOUT_SPEED 1500.  //extrusion speed
-#define EXTRUDER_RUNOUT_EXTRUDE 100
+#define EXTRUDER_RUNOUT_MINTEMP 	190
+#define EXTRUDER_RUNOUT_SECONDS 	30.
+#define EXTRUDER_RUNOUT_ESTEPS 		14. //mm filament
+#define EXTRUDER_RUNOUT_SPEED 		1500.  //extrusion speed
+#define EXTRUDER_RUNOUT_EXTRUDE 	100
 
 //These defines help to calibrate the AD595 sensor in case you get wrong temperature measurements.
 //The measured temperature is defined as "actualTemp = (measuredTemp * TEMP_SENSOR_AD595_GAIN) + TEMP_SENSOR_AD595_OFFSET"
-#define TEMP_SENSOR_AD595_OFFSET 0.0
-#define TEMP_SENSOR_AD595_GAIN   1.0
+#define TEMP_SENSOR_AD595_OFFSET 	0.0
+#define TEMP_SENSOR_AD595_GAIN   	1.0
 
 //This is for controlling a fan to cool down the stepper drivers
 //it will turn on when any driver is enabled
 //and turn off after the set amount of seconds from last driver being disabled again
-#define CONTROLLERFAN_PIN -1 //Pin used for the fan to cool controller (-1 to disable)
-#define CONTROLLERFAN_SECS 60 //How many seconds, after all motors were disabled, the fan should run
-#define CONTROLLERFAN_SPEED 255  // == full speed
+#define CONTROLLERFAN_PIN 			-1 //Pin used for the fan to cool controller (-1 to disable)
+#define CONTROLLERFAN_SECS 			60 //How many seconds, after all motors were disabled, the fan should run
+#define CONTROLLERFAN_SPEED 		255  // == full speed
 
 // When first starting the main fan, run it at full speed for the
 // given number of milliseconds.  This gets the fan spinning reliably
@@ -75,18 +75,18 @@
 // extruder temperature is above/below EXTRUDER_AUTO_FAN_TEMPERATURE.
 // Multiple extruders can be assigned to the same pin in which case
 // the fan will turn on when any selected extruder is above the threshold.
-#define EXTRUDER_0_AUTO_FAN_PIN   -1
-#define EXTRUDER_1_AUTO_FAN_PIN   -1
-#define EXTRUDER_2_AUTO_FAN_PIN   -1
-#define EXTRUDER_AUTO_FAN_TEMPERATURE 50
-#define EXTRUDER_AUTO_FAN_SPEED   255  // == full speed
+#define EXTRUDER_0_AUTO_FAN_PIN   		-1
+#define EXTRUDER_1_AUTO_FAN_PIN   		-1
+#define EXTRUDER_2_AUTO_FAN_PIN   		-1
+#define EXTRUDER_AUTO_FAN_TEMPERATURE 	50
+#define EXTRUDER_AUTO_FAN_SPEED   		255  // == full speed
 
 
 //===========================================================================
 //=============================Mechanical Settings===========================
 //===========================================================================
 
-#define ENDSTOPS_ONLY_FOR_HOMING // If defined the endstops will only be used for homing
+#define ENDSTOPS_ONLY_FOR_HOMING 		// If defined the endstops will only be used for homing
 
 
 //// AUTOSET LOCATIONS OF LIMIT SWITCHES
@@ -184,9 +184,9 @@
     // Remember: you should set the second extruder x-offset to 0 in your slicer.
 
 // Pins for second x-carriage stepper driver (defined here to avoid further complicating pins.h)
-#define X2_ENABLE_PIN 29
-#define X2_STEP_PIN 25
-#define X2_DIR_PIN 23
+#define X2_ENABLE_PIN 	29
+#define X2_STEP_PIN 	25
+#define X2_DIR_PIN 		23
 
 // There are a few selectable movement modes for dual x-carriages using M605 S<mode>
 //    Mode 0: Full control. The slicer has full control over both x-carriages and can achieve optimal travel results
@@ -201,7 +201,7 @@
 #define DEFAULT_DUAL_X_CARRIAGE_MODE 0
 
 // As the x-carriages are independent we can now account for any relative Z offset
-#define EXTRUDER1_Z_OFFSET 0.0           // z offset relative to extruder 0
+#define EXTRUDER1_Z_OFFSET 		0.0           // z offset relative to extruder 0
 
 // Default settings in "Auto-park Mode"
 #define TOOLCHANGE_PARK_ZLIFT   0.2      // the distance to raise Z axis when parking an extruder
@@ -213,9 +213,9 @@
 #endif //DUAL_X_CARRIAGE
 
 //homing hits the endstop, then retracts by this distance, before it tries to slowly bump again:
-#define X_HOME_RETRACT_MM 5
-#define Y_HOME_RETRACT_MM 5
-#define Z_HOME_RETRACT_MM 2
+#define X_HOME_RETRACT_MM 		5
+#define Y_HOME_RETRACT_MM 		5
+#define Z_HOME_RETRACT_MM 		2
 //#define QUICK_HOME  //if this is defined, if both x and y are to be homed, a diagonal move will be performed initially.
 
 #define AXIS_RELATIVE_MODES {false, false, false, false}
@@ -236,7 +236,7 @@
 
 // Feedrates for manual moves along X, Y, Z, E from panel
 #ifdef ULTIPANEL
-#define MANUAL_FEEDRATE {50*60, 50*60, 4*60, 60}  // set the speeds for manual moves (mm/min)
+#define MANUAL_FEEDRATE {50*60, 50*60, 2*60, 1*60}  // set the speeds for manual moves (mm/min)
 #endif
 
 //Comment to disable setting feedrate multiplier via encoder
@@ -418,7 +418,7 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 
 //adds support for experimental filament exchange support M600; requires display
 #ifdef ULTIPANEL
-  #define FILAMENTCHANGEENABLE
+  //#define FILAMENTCHANGEENABLE
   #ifdef FILAMENTCHANGEENABLE
     #define FILAMENTCHANGE_XPOS 3
     #define FILAMENTCHANGE_YPOS 3
@@ -446,19 +446,19 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 #endif
 
 #if TEMP_SENSOR_0 > 0
-  #define THERMISTORHEATER_0 TEMP_SENSOR_0
+  #define THERMISTORHEATER_0 		TEMP_SENSOR_0
   #define HEATER_0_USES_THERMISTOR
 #endif
 #if TEMP_SENSOR_1 > 0
-  #define THERMISTORHEATER_1 TEMP_SENSOR_1
+  #define THERMISTORHEATER_1 		TEMP_SENSOR_1
   #define HEATER_1_USES_THERMISTOR
 #endif
 #if TEMP_SENSOR_2 > 0
-  #define THERMISTORHEATER_2 TEMP_SENSOR_2
+  #define THERMISTORHEATER_2 		TEMP_SENSOR_2
   #define HEATER_2_USES_THERMISTOR
 #endif
 #if TEMP_SENSOR_BED > 0
-  #define THERMISTORBED TEMP_SENSOR_BED
+  #define THERMISTORBED 			TEMP_SENSOR_BED
   #define BED_USES_THERMISTOR
 #endif
 #if TEMP_SENSOR_0 == -1

@@ -44,6 +44,10 @@ extern float current_temperature_bed;
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   extern float redundant_temperature;
 #endif
+#ifdef ADC_KEYPAD
+extern unsigned int current_ADCKey_raw;
+extern unsigned char ADCKey_count;
+#endif
 
 #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
   extern unsigned char soft_pwm_bed;

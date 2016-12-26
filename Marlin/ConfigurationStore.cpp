@@ -29,7 +29,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 
 
 
-#define EEPROM_OFFSET 100
+#define EEPROM_OFFSET 	100
 
 
 // IMPORTANT:  Whenever there are changes made to the variables stored in EEPROM
@@ -37,16 +37,19 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
+
+
 #ifdef DELTA
 #define EEPROM_VERSION "V11"
 #else
 #define EEPROM_VERSION "V10"
 #endif
 
+
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings() 
 {
-  char ver[4]= "000";
+  char ver[4]= "000";  
   int i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver); // invalidate data first 
   EEPROM_WRITE_VAR(i,axis_steps_per_unit);  
@@ -96,6 +99,13 @@ void Config_StoreSettings()
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
+
+  #ifdef EPR_MAGIC_ADDR
+  i = EPR_MAGIC_ADDR;
+  char magicID = EPR_MAGIC_ID;
+  EEPROM_WRITE_VAR(i,magicID);
+  #endif
+  
   SERIAL_ECHO_START;
   SERIAL_ECHOLNPGM("Settings Stored");
 }
@@ -188,12 +198,22 @@ void Config_PrintSettings()
 #ifdef EEPROM_SETTINGS
 void Config_RetrieveSettings()
 {
-    int i=EEPROM_OFFSET;
+	int i=0;
+	#ifdef EPR_MAGIC_ADDR
+	i=EPR_MAGIC_ADDR;
+    char magicID;
+    EEPROM_READ_VAR(i,magicID); 	//read magic ID    	
+	#endif	
+	i=EEPROM_OFFSET;
     char stored_ver[4];
     char ver[4]=EEPROM_VERSION;
     EEPROM_READ_VAR(i,stored_ver); //read stored version
     //  SERIAL_ECHOLN("Version: [" << ver << "] Stored version: [" << stored_ver << "]");
-    if (strncmp(ver,stored_ver,3) == 0)
+    #ifdef EPR_MAGIC_ADDR
+    if ((strncmp(ver,stored_ver,3) == 0) && (magicID == EPR_MAGIC_ID))
+	#else
+	if (strncmp(ver,stored_ver,3) == 0)
+	#endif
     {
         // version number match
         EEPROM_READ_VAR(i,axis_steps_per_unit);  
@@ -314,7 +334,7 @@ void Config_ResetDefault()
 #endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
 
-SERIAL_ECHO_START;
-SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
+	SERIAL_ECHO_START;
+	SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
 
 }

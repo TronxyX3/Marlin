@@ -6,11 +6,7 @@
 * When selecting the Russian language, a slightly different LCD implementation is used to handle UTF8 characters.
 **/
 
-#ifndef REPRAPWORLD_KEYPAD
-extern volatile uint8_t buttons;  //the last checked buttons in a bit array.
-#else
-extern volatile uint16_t buttons;  //an extended version of the last checked buttons in a bit array.
-#endif
+extern volatile uint8_t buttons;  //an extended version of the last checked buttons in a bit array.
 
 ////////////////////////////////////
 // Setup button and encode mappings for each panel (into 'buttons' variable
@@ -74,16 +70,20 @@ extern volatile uint16_t buttons;  //an extended version of the last checked but
 
 #elif defined(REPRAPWORLD_KEYPAD)
     // define register bit values, don't change it
-    #define BLEN_REPRAPWORLD_KEYPAD_F3 0
-    #define BLEN_REPRAPWORLD_KEYPAD_F2 1
-    #define BLEN_REPRAPWORLD_KEYPAD_F1 2
-    #define BLEN_REPRAPWORLD_KEYPAD_UP 3
-    #define BLEN_REPRAPWORLD_KEYPAD_RIGHT 4
-    #define BLEN_REPRAPWORLD_KEYPAD_MIDDLE 5
-    #define BLEN_REPRAPWORLD_KEYPAD_DOWN 6
-    #define BLEN_REPRAPWORLD_KEYPAD_LEFT 7
-    
-    #define REPRAPWORLD_BTN_OFFSET 3 // bit offset into buttons for shift register values
+    #define BLEN_REPRAPWORLD_KEYPAD_F3 		0
+    #define BLEN_REPRAPWORLD_KEYPAD_F2 		1
+    #define BLEN_REPRAPWORLD_KEYPAD_F1 		2
+   	#define BLEN_REPRAPWORLD_KEYPAD_DOWN 	3
+    #define BLEN_REPRAPWORLD_KEYPAD_RIGHT 	4
+    #define BLEN_REPRAPWORLD_KEYPAD_MIDDLE 	5    
+	#define BLEN_REPRAPWORLD_KEYPAD_UP 		6
+    #define BLEN_REPRAPWORLD_KEYPAD_LEFT 	7
+
+	#ifdef ADC_KEYPAD
+    #define REPRAPWORLD_BTN_OFFSET 			0
+    #else
+	#define REPRAPWORLD_BTN_OFFSET 			3 // bit offset into buttons for shift register values
+	#endif
 
     #define EN_REPRAPWORLD_KEYPAD_F3 (1<<(BLEN_REPRAPWORLD_KEYPAD_F3+REPRAPWORLD_BTN_OFFSET))
     #define EN_REPRAPWORLD_KEYPAD_F2 (1<<(BLEN_REPRAPWORLD_KEYPAD_F2+REPRAPWORLD_BTN_OFFSET))
@@ -93,15 +93,21 @@ extern volatile uint16_t buttons;  //an extended version of the last checked but
     #define EN_REPRAPWORLD_KEYPAD_MIDDLE (1<<(BLEN_REPRAPWORLD_KEYPAD_MIDDLE+REPRAPWORLD_BTN_OFFSET))
     #define EN_REPRAPWORLD_KEYPAD_DOWN (1<<(BLEN_REPRAPWORLD_KEYPAD_DOWN+REPRAPWORLD_BTN_OFFSET))
     #define EN_REPRAPWORLD_KEYPAD_LEFT (1<<(BLEN_REPRAPWORLD_KEYPAD_LEFT+REPRAPWORLD_BTN_OFFSET))
-
-    #define LCD_CLICKED ((buttons&EN_C) || (buttons&EN_REPRAPWORLD_KEYPAD_F1))
-    #define REPRAPWORLD_KEYPAD_MOVE_Y_DOWN (buttons&EN_REPRAPWORLD_KEYPAD_DOWN)
-    #define REPRAPWORLD_KEYPAD_MOVE_Y_UP (buttons&EN_REPRAPWORLD_KEYPAD_UP)
-    #define REPRAPWORLD_KEYPAD_MOVE_HOME (buttons&EN_REPRAPWORLD_KEYPAD_MIDDLE)
+	
+	#ifdef ADC_KEYPAD
+	#define LCD_CLICKED (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_RIGHT)
+	#define	LCD_OPEN_MENU (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_MIDDLE)
+	#define	LCD_MENU_BACK (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_LEFT)	
+	#else
+	#define LCD_CLICKED ((buttons&EN_C) || (buttons&EN_REPRAPWORLD_KEYPAD_F1))
+	#endif
+    
+    #define REPRAPWORLD_KEYPAD_MOVE_Z_DOWN (buttons&EN_REPRAPWORLD_KEYPAD_F1)
+    #define REPRAPWORLD_KEYPAD_MOVE_Z_UP (buttons&EN_REPRAPWORLD_KEYPAD_F2)
+    #define REPRAPWORLD_KEYPAD_MOVE_HOME (buttons&EN_REPRAPWORLD_KEYPAD_F3)
 
 #elif defined(NEWPANEL)
-  #define LCD_CLICKED (buttons&EN_C)
-  
+  	//#define LCD_CLICKED (buttons&EN_C)    
 #else // old style ULTIPANEL
   //bits in the shift register that carry the buttons for:
   // left up center down right red(stop)
@@ -737,6 +743,21 @@ static void lcd_implementation_quick_feedback()
     #endif
 #endif
 }
+
+static void lcd_implementation_feedback_ShortBeep()
+{
+#if defined(BEEPER) && BEEPER > -1
+    SET_OUTPUT(BEEPER);	
+    for(int8_t i=0;i<10;i++)
+    {
+      WRITE(BEEPER,HIGH);
+      delayMicroseconds(100);
+      WRITE(BEEPER,LOW);
+      delayMicroseconds(100);
+    }
+#endif
+}
+
 
 #ifdef LCD_HAS_STATUS_INDICATORS
 static void lcd_implementation_update_indicators()
