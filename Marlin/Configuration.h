@@ -82,7 +82,7 @@
 // User-specified version info of this build to display in [Pronterface, etc] terminal window during
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
-#define STRING_CONFIG_H_AUTHOR "Phisik" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Badgeek" // Who made the changes.
 #define SHOW_BOOTSCREEN
 #define STRING_SPLASH_LINE1 SHORT_BUILD_VERSION // will be shown during bootup in line 1
 //#define STRING_SPLASH_LINE2 STRING_DISTRIBUTION_DATE // will be shown during bootup in line 2
@@ -110,7 +110,7 @@
 
 // Optional custom name for your RepStrap or other custom machine
 // Displayed in the LCD "Ready" message
-#define CUSTOM_MACHINE_NAME "Prusa i3"
+#define CUSTOM_MACHINE_NAME "X3A_8"
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
@@ -154,7 +154,7 @@
 // 3 is Mendel-parts thermistor (4.7k pullup)
 // 4 is 10k thermistor !! do not use it for a hotend. It gives bad resolution at high temp. !!
 // 5 is 100K thermistor - ATC Semitec 104GT-2 (Used in ParCan & J-Head) (4.7k pullup)
-// 501 is 100K thermistor -B3950  (4.7k pullup) =========Zonestar ==========
+// 501 is 100K thermistor -B3950  (4.7k pullup) ========= TronxyX3 ==========
 // 6 is 100k EPCOS - Not as accurate as table 1 (created using a fluke thermocouple) (4.7k pullup)
 // 7 is 100k Honeywell thermistor 135-104LAG-J01 (4.7k pullup)
 // 71 is 100k Honeywell thermistor 135-104LAF-J01 (4.7k pullup)
@@ -214,7 +214,7 @@
 #define HEATER_1_MAXTEMP 275
 #define HEATER_2_MAXTEMP 275
 #define HEATER_3_MAXTEMP 275
-#define BED_MAXTEMP 120
+#define BED_MAXTEMP 130
 
 // If you want the M105 heater power reported in watts, define the BED_WATTS, and (shared for all extruders) EXTRUDER_WATTS
 //#define EXTRUDER_WATTS (12.0*12.0/6.7) // P=U^2/R
@@ -236,15 +236,15 @@
   //#define SLOW_PWM_HEATERS // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   //#define PID_PARAMS_PER_EXTRUDER // Uses separate PID parameters for each extruder (useful for mismatched extruders)
                                     // Set/get with gcode: M301 E[extruder number, 0-2]
-  #define PID_FUNCTIONAL_RANGE 20  // If the temperature difference between the target temperature and the actual temperature
+  #define PID_FUNCTIONAL_RANGE 10  // If the temperature difference between the target temperature and the actual temperature
                                   // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
   #define PID_INTEGRAL_DRIVE_MAX PID_MAX  //limit for the integral term
   #define K1 0.95 //smoothing factor within the PID
 
-  // Zonestart 3D printer
-  #define  DEFAULT_Kp 12
-  #define  DEFAULT_Ki 0.4
-  #define  DEFAULT_Kd 86
+  // TronxyX3 3D printer
+  #define  DEFAULT_Kp 22.2
+  #define  DEFAULT_Ki 1.08
+  #define  DEFAULT_Kd 114
 
 
 
@@ -279,9 +279,9 @@
 // If your configuration is significantly different than this and you don't understand the issues involved, you probably
 // shouldn't use bed PID until someone else verifies your hardware works.
 // If this is enabled, find your own PID constants below.
-#define PIDTEMPBED
+//#define PIDTEMPBED
 
-//#define BED_LIMIT_SWITCHING
+#define BED_LIMIT_SWITCHING
 
 // This sets the max power delivered to the bed, and replaces the HEATER_BED_DUTY_CYCLE_DIVIDER option.
 // all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
@@ -295,10 +295,10 @@
 
   #define PID_BED_INTEGRAL_DRIVE_MAX MAX_BED_POWER //limit for the integral term
 
-  // Zonestar 3D printer
-  #define  DEFAULT_bedKp   321.23
-  #define  DEFAULT_bedKi  23.34
-  #define  DEFAULT_bedKd  1105.25
+  // TronxyX3 printer
+  #define  DEFAULT_bedKp  10.0
+  #define  DEFAULT_bedKi  0.023
+  #define  DEFAULT_bedKd  305.4
 
 
   //120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
@@ -364,7 +364,7 @@
 // @section homing
 
 // coarse Endstop Settings
-// #define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
+#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
 
 #if DISABLED(ENDSTOPPULLUPS)
   // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
@@ -380,7 +380,7 @@
 // Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
 const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Z_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
@@ -489,12 +489,12 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 // @section machine
 
 // Travel limits after homing (units are in mm)
-#define X_MIN_POS -45
-#define Y_MIN_POS -5
+#define X_MIN_POS -18
+#define Y_MIN_POS -23
 #define Z_MIN_POS 0
-#define X_MAX_POS 205
-#define Y_MAX_POS 205
-#define Z_MAX_POS 170
+#define X_MAX_POS 225
+#define Y_MAX_POS 225
+#define Z_MAX_POS 316
 
 //===========================================================================
 //========================= Filament Runout Sensor ==========================
@@ -561,10 +561,10 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 
   #if ENABLED(AUTO_BED_LEVELING_GRID)
 
-    #define LEFT_PROBE_BED_POSITION 30
+    #define LEFT_PROBE_BED_POSITION 20
     #define RIGHT_PROBE_BED_POSITION 160
-    #define FRONT_PROBE_BED_POSITION 30
     #define BACK_PROBE_BED_POSITION 160
+    #define FRONT_PROBE_BED_POSITION 20
 
     #define MIN_PROBE_EDGE 10 // The Z probe minimum square sides can be no smaller than this.
 
@@ -576,12 +576,12 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 
     // Arbitrary points to probe.
     // A simple cross-product is used to estimate the plane of the bed.
-    #define ABL_PROBE_PT_1_X 15
-    #define ABL_PROBE_PT_1_Y 180
-    #define ABL_PROBE_PT_2_X 15
+    #define ABL_PROBE_PT_1_X 20
+    #define ABL_PROBE_PT_1_Y 160
+    #define ABL_PROBE_PT_2_X 20
     #define ABL_PROBE_PT_2_Y 20
-    #define ABL_PROBE_PT_3_X 170
-    #define ABL_PROBE_PT_3_Y 20
+    #define ABL_PROBE_PT_3_X 180
+    #define ABL_PROBE_PT_3_Y 10
 
   #endif // AUTO_BED_LEVELING_GRID
 
@@ -602,15 +602,15 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
   //    |           |
   //    O-- FRONT --+
   //  (0,0)
-  #define X_PROBE_OFFSET_FROM_EXTRUDER -20  // X offset: -left  [of the nozzle] +right
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -43  // Y offset: -front [of the nozzle] +behind
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -1.05   // Z offset: -below [the nozzle] (always negative!)
+  #define X_PROBE_OFFSET_FROM_EXTRUDER -32  // X offset: -left  [of the nozzle] +right
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER -10  // Y offset: -front [of the nozzle] +behind
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -0.5   // Z offset: -below [the nozzle] (always negative!)
 
-  #define XY_TRAVEL_SPEED 5000         // X and Y axis travel speed between probes, in mm/min.
+  #define XY_TRAVEL_SPEED 6000         // X and Y axis travel speed between probes, in mm/min.
 
-  #define Z_RAISE_BEFORE_PROBING 15   // How much the Z axis will be raised before traveling to the first probing point.
-  #define Z_RAISE_BETWEEN_PROBINGS 5  // How much the Z axis will be raised when traveling from between next probing points.
-  #define Z_RAISE_AFTER_PROBING 15    // How much the Z axis will be raised after the last probing point.
+  #define Z_RAISE_BEFORE_PROBING 10   // How much the Z axis will be raised before traveling to the first probing point.
+  #define Z_RAISE_BETWEEN_PROBINGS 4  // How much the Z axis will be raised when traveling from between next probing points.
+  #define Z_RAISE_AFTER_PROBING 10    // How much the Z axis will be raised after the last probing point.
 
   //#define Z_PROBE_END_SCRIPT "G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10" // These commands will be executed in the end of G29 routine.
                                                                              // Useful to retract a deployable Z probe.
@@ -672,17 +672,18 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
  * MOVEMENT SETTINGS
  */
 
-#define HOMING_FEEDRATE {70*60, 70*60, 10*60, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE {100*60, 100*60, 2*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,400,95}  // default steps per unit for Zonestar 3D printer
-#define DEFAULT_MAX_FEEDRATE          {400, 400, 10, 50}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {1000,1000,300,5000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,400,90}  // default steps per unit for TronxyX3 3D printer
+#define DEFAULT_MAX_FEEDRATE          {400, 400, 4, 50}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {3000,3000,1000,5000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          1000    // X, Y, Z and E acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration in mm/s^2 for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   1000    // X, Y, Z acceleration in mm/s^2 for travel (non printing) moves
+//todo
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
 #define DEFAULT_XYJERK                20.0    // (mm/sec)
@@ -701,8 +702,8 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 #if ENABLED(CUSTOM_M_CODES)
   #if ENABLED(AUTO_BED_LEVELING_FEATURE)
     #define CUSTOM_M_CODE_SET_Z_PROBE_OFFSET 851
-    #define Z_PROBE_OFFSET_RANGE_MIN -20
-    #define Z_PROBE_OFFSET_RANGE_MAX 20
+    #define Z_PROBE_OFFSET_RANGE_MIN -15
+    #define Z_PROBE_OFFSET_RANGE_MAX 0
   #endif
 #endif
 
@@ -737,13 +738,13 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 // @section temperature
 
 // Preheat Constants
-#define PLA_PREHEAT_HOTEND_TEMP 180
-#define PLA_PREHEAT_HPB_TEMP 60
-#define PLA_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
+#define PLA_PREHEAT_HOTEND_TEMP 190
+#define PLA_PREHEAT_HPB_TEMP 55
+#define PLA_PREHEAT_FAN_SPEED 255   // Insert Value between 0 and 255
 
-#define ABS_PREHEAT_HOTEND_TEMP 220
-#define ABS_PREHEAT_HPB_TEMP 100
-#define ABS_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
+#define ABS_PREHEAT_HOTEND_TEMP 240
+#define ABS_PREHEAT_HPB_TEMP 85
+#define ABS_PREHEAT_FAN_SPEED 255   // Insert Value between 0 and 255
 
 //==============================LCD and SD support=============================
 // @section lcd
@@ -837,7 +838,7 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
     #define REPRAPWORLD_KEYPAD
   #endif
   #if DISABLED(REPRAPWORLD_KEYPAD_MOVE_STEP)
-    #define REPRAPWORLD_KEYPAD_MOVE_STEP 10.0
+    #define REPRAPWORLD_KEYPAD_MOVE_STEP 5.0
   #endif
 #endif
 
@@ -880,13 +881,13 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 // Use software PWM to drive the fan, as for the heaters. This uses a very low frequency
 // which is not as annoying as with the hardware PWM. On the other hand, if this frequency
 // is too low, you should also increment SOFT_PWM_SCALE.
-#define FAN_SOFT_PWM
+// #define FAN_SOFT_PWM
 
 // Incrementing this by 1 will double the software PWM frequency,
 // affecting heaters, and the fan if FAN_SOFT_PWM is enabled.
 // However, control resolution will be halved for each increment;
 // at zero value, there are 128 effective control positions.
-#define SOFT_PWM_SCALE 1
+#define SOFT_PWM_SCALE 0
 
 // Temperature status LEDs that display the hotend and bet temperature.
 // If all hotends and bed temperature and temperature setpoint are < 54C then the BLUE led is on.
