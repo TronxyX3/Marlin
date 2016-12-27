@@ -2910,7 +2910,8 @@ void lcd_update() {
         if(buttons_reprapworld_keypad != 0)
         {
 
-            lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW;
+            lcdDrawUpdate = LCDVIEW_CALL_REDRAW_NEXT;
+            return_to_status_ms = ms + LCD_TIMEOUT_TO_STATUS;
 
             if((currentScreen == lcd_main_menu) || (currentScreen == lcd_tune_menu) || (currentScreen == lcd_prepare_menu) || (currentScreen == lcd_control_menu)\
                     || (currentScreen == lcd_move_menu)\
