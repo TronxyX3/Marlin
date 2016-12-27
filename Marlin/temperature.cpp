@@ -1763,7 +1763,6 @@ void Temperature::isr() {
       #if DISABLED(ADC_KEYPAD)
         lcd_buttons_update();
       #endif        
-      lcd_buttons_update();
       temp_state = MeasureTemp_0;
       break;
     case MeasureTemp_0:
@@ -1781,7 +1780,6 @@ void Temperature::isr() {
       #if DISABLED(ADC_KEYPAD)
         lcd_buttons_update();
       #endif        
-      lcd_buttons_update();
       temp_state = MeasureTemp_BED;
       break;
     case MeasureTemp_BED:
@@ -1799,7 +1797,6 @@ void Temperature::isr() {
       #if DISABLED(ADC_KEYPAD)
         lcd_buttons_update();
       #endif
-      lcd_buttons_update();
       temp_state = MeasureTemp_1;
       break;
     case MeasureTemp_1:
@@ -1817,7 +1814,6 @@ void Temperature::isr() {
       #if DISABLED(ADC_KEYPAD)
         lcd_buttons_update();
       #endif
-      lcd_buttons_update();
       temp_state = MeasureTemp_2;
       break;
     case MeasureTemp_2:
@@ -1835,7 +1831,6 @@ void Temperature::isr() {
       #if DISABLED(ADC_KEYPAD)
         lcd_buttons_update();
       #endif        
-      lcd_buttons_update();
       temp_state = MeasureTemp_3;
       break;
     case MeasureTemp_3:
@@ -1853,7 +1848,6 @@ void Temperature::isr() {
       #if DISABLED(ADC_KEYPAD)
         lcd_buttons_update();
       #endif        
-      lcd_buttons_update();
       temp_state = Measure_FILWIDTH;
       break;
 // Modified by Phisik
