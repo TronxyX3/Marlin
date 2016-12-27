@@ -334,6 +334,7 @@ uint8_t lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; // Set when the LCD needs to 
     _countedItems = _thisItemNr; \
     UNUSED(_skipStatic)
 
+  //on ADC_KEYPAD this should be disabled
   #if ENABLED(ENCODER_RATE_MULTIPLIER)
 
     //#define ENCODER_RATE_MULTIPLIER_DEBUG  // If defined, output the encoder steps per second value
@@ -2593,7 +2594,7 @@ void lcd_init() {
       WRITE(BTN_ENC, HIGH);
     #endif
 
-    #if ENABLED(REPRAPWORLD_KEYPAD)
+    #if ENABLED(REPRAPWORLD_KEYPAD)  && DISABLED(ADC_KEYPAD)
       SET_OUTPUT(SHIFT_CLK);
       OUT_WRITE(SHIFT_LD, HIGH);
       SET_INPUT_PULLUP(SHIFT_OUT);
@@ -2772,7 +2773,7 @@ void lcd_update() {
         slow_buttons = lcd_implementation_read_slow_buttons(); // buttons which take too long to read in interrupt context
       #endif
 
-      #if ENABLED(REPRAPWORLD_KEYPAD)
+      #if ENABLED(REPRAPWORLD_KEYPAD) && DISABLED(ADC_KEYPAD)
 
         static uint8_t keypad_debounce = 0;
 
@@ -2803,7 +2804,7 @@ void lcd_update() {
           }
         }
       #endif // REPRAPWORLD_KEYPAD
-
+      #if DISABLED(ADC_KEYPAD)
       bool encoderPastThreshold = (abs(encoderDiff) >= ENCODER_PULSES_PER_STEP);
       if (encoderPastThreshold || lcd_clicked) {
         if (encoderPastThreshold) {
@@ -2838,6 +2839,12 @@ void lcd_update() {
 
           encoderPosition += (encoderDiff * encoderMultiplier) / ENCODER_PULSES_PER_STEP;
           encoderDiff = 0;
+        #else
+
+        //todo
+
+        #endif
+
           #if ENABLED(DOGLCD)
             drawing_screen = false;  // refresh the complete screen for a encoder change (different menu-item/value)
           #endif
