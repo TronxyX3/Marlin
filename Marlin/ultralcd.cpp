@@ -234,7 +234,6 @@ uint8_t lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; // Set when the LCD needs to 
    *   _thisItemNr is the index of each MENU_ITEM or STATIC_ITEM
    *   _countedItems is the total number of items in the menu (after one call)
    */
-#if DISABLED(ADC_KEYPAD)
   #define START_SCREEN_OR_MENU(LIMIT) \
     ENCODER_DIRECTION_MENUS(); \
     encoderRateMultiplierEnabled = false; \
@@ -245,18 +244,6 @@ uint8_t lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; // Set when the LCD needs to 
       encoderLine = max(0, _countedItems - LIMIT); \
       encoderPosition = encoderLine * (ENCODER_STEPS_PER_MENU_ITEM); \
     }
-#else
-    #define START_SCREEN_OR_MENU(LIMIT) \
-      ENCODER_DIRECTION_MENUS(); \
-      encoderRateMultiplierEnabled = false; \
-      if (encoderPosition > 0x8000) encoderPosition = 0; \
-      static int8_t _countedItems = 0; \
-      int8_t encoderLine = encoderPosition; \
-      if (_countedItems > 0 && encoderLine >= _countedItems - LIMIT) { \
-        encoderLine = max(0, _countedItems - LIMIT); \
-        encoderPosition = encoderLine; \
-      }
- #endif
 
   #define SCREEN_OR_MENU_LOOP() \
     int8_t _menuLineNr = encoderTopLine, _thisItemNr; \
@@ -351,7 +338,7 @@ uint8_t lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; // Set when the LCD needs to 
     _countedItems = _thisItemNr; \
     UNUSED(_skipStatic)
 
-  #if ENABLED(ENCODER_RATE_MULTIPLIER) && DISABLED(ADC_KEYPAD)
+  #if ENABLED(ENCODER_RATE_MULTIPLIER)
 
     //#define ENCODER_RATE_MULTIPLIER_DEBUG  // If defined, output the encoder steps per second value
 
@@ -370,7 +357,7 @@ uint8_t lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; // Set when the LCD needs to 
   #define MENU_ITEM_DUMMY() do { _thisItemNr++; } while(0)
   #define MENU_ITEM_EDIT(type, label, ...) MENU_ITEM(setting_edit_ ## type, label, PSTR(label), ## __VA_ARGS__)
   #define MENU_ITEM_EDIT_CALLBACK(type, label, ...) MENU_ITEM(setting_edit_callback_ ## type, label, PSTR(label), ## __VA_ARGS__)
-  #if ENABLED(ENCODER_RATE_MULTIPLIER) && DISABLED(ADC_KEYPAD)
+  #if ENABLED(ENCODER_RATE_MULTIPLIER)
     #define MENU_MULTIPLIER_ITEM_EDIT(type, label, ...) MENU_MULTIPLIER_ITEM(setting_edit_ ## type, label, PSTR(label), ## __VA_ARGS__)
     #define MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(type, label, ...) MENU_MULTIPLIER_ITEM(setting_edit_callback_ ## type, label, PSTR(label), ## __VA_ARGS__)
   #else //!ENCODER_RATE_MULTIPLIER
