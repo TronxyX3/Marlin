@@ -2778,7 +2778,11 @@ void lcd_update() {
     lcd_buttons_update();
 
     // If the action button is pressed...
+    #if DISABLED(ADC_KEYPAD)
     if (LCD_CLICKED) {
+    #else
+    if (LCD_OPEN_MENU) {
+    #endif
       if (!wait_for_unclick) {           // If not waiting for a debounce release:
         wait_for_unclick = true;         //  Set debounce flag to ignore continous clicks
         lcd_clicked = !wait_for_user;    //  Keep the click if not waiting for a user-click
