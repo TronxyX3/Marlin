@@ -41,6 +41,9 @@
 #define Y_STOP_PIN         19
 #define Z_STOP_PIN         20
 
+#define Z_MIN_PIN          20
+#define Z_MAX_PIN          -1
+
 //
 // Z Probe (when not Z_MIN_PIN)
 //
@@ -97,7 +100,7 @@
 #endif
 
 #if MB(AZTEEG_X1) || MB(STB_11) || IS_MELZI
-  #define FAN_PIN           4 // Works for Panelolu2 too
+  #define FAN_PIN           -1 // Works for Panelolu2 too
 #endif
 
 //
@@ -111,7 +114,7 @@
 #define SDSS               31
 
 #if IS_MELZI
-  #define LED_PIN          27 // On some broken versions of the Sanguino libraries the pin definitions are wrong, so LED_PIN needs to be 28. But you should upgrade your Sanguino libraries! See #368.
+  #define LED_PIN          -1 // On some broken versions of the Sanguino libraries the pin definitions are wrong, so LED_PIN needs to be 28. But you should upgrade your Sanguino libraries! See #368.
 #elif MB(STB_11)
   #define LCD_BACKLIGHT_PIN 17 // LCD backlight LED
 #endif
@@ -119,7 +122,21 @@
 //
 // LCD / Controller
 //
-#if ENABLED(ULTRA_LCD) && ENABLED(NEWPANEL)
+
+// Zonestar LCD support
+#if ENABLED(ULTRA_LCD) && ENABLED(ADC_KEYPAD)
+    #define BEEPER_PIN -1
+    #define SD_DETECT_PIN     -1
+    #define LCD_PINS_RS       28
+    #define LCD_PINS_ENABLE   29
+    #define LCD_PINS_D4       10
+    #define LCD_PINS_D5       11
+    #define LCD_PINS_D6       16
+    #define LCD_PINS_D7       17
+    #define ADC_KEYPAD_PIN     1  // MUST USE ANALOG INPUT NUMBERING NOT DIGITAL OUTPUT NUMBERING!!!!!!!!!
+#endif //ADC_KEYPAD
+
+#if ENABLED(ULTRA_LCD) && ENABLED(NEWPANEL) && DISABLED(ADC_KEYPAD)
 
   // No buzzer installed
   #define BEEPER_PIN -1
