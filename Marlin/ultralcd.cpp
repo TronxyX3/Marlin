@@ -2932,8 +2932,10 @@ void lcd_update() {
                     encoderPosition--;
             }
 
+            #ifdef ADC_KEYPAD_DEBUG
+            SERIAL_ECHOPAIR("buttons_reprapworld_keypad: ", (unsigned long)buttons_reprapworld_keypad);
             SERIAL_ECHOPAIR("encoderPosition: ", (unsigned long)encoderPosition);
-
+            #endif
 
         }
     #endif
