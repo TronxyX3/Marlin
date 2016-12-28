@@ -659,7 +659,7 @@
  *     But: `M851 Z+1` with a CLEARANCE of 2  =>  2mm from bed to nozzle.
  */
 #define Z_CLEARANCE_DEPLOY_PROBE   10 // Z Clearance for Deploy/Stow
-#define Z_CLEARANCE_BETWEEN_PROBES  5 // Z Clearance between probe points
+#define Z_CLEARANCE_BETWEEN_PROBES  2 // Z Clearance between probe points
 
 //
 // For M851 give a range for adjusting the Z probe offset
@@ -883,9 +883,10 @@
 
 #define Z_SAFE_HOMING
 
+//warning: careful with this
 #if ENABLED(Z_SAFE_HOMING)
-  #define Z_SAFE_HOMING_X_POINT ((max(X_MIN_POS, 0) + X_MAX_POS) / 2)    // X point for Z homing when homing all axis (G28).
-  #define Z_SAFE_HOMING_Y_POINT ((max(Y_MIN_POS, 0) + Y_MAX_POS) / 2)    // Y point for Z homing when homing all axis (G28).
+  #define Z_SAFE_HOMING_X_POINT ((max(X_MIN_POS, 0) + X_MAX_POS) / 2) + (X_PROBE_OFFSET_FROM_EXTRUDER)   // X point for Z homing when homing all axis (G28).
+  #define Z_SAFE_HOMING_Y_POINT ((max(Y_MIN_POS, 0) + Y_MAX_POS) / 2) + (Y_PROBE_OFFSET_FROM_EXTRUDER)  // Y point for Z homing when homing all axis (G28).
 #endif
 
 // Homing speeds (mm/m)
