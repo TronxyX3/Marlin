@@ -145,8 +145,13 @@
                                               EN_REPRAPWORLD_KEYPAD_UP | \
                                               EN_REPRAPWORLD_KEYPAD_LEFT) \
                                             )
-
+  #if DISABLED(ADC_KEYPAD)
     #define LCD_CLICKED ((buttons & EN_C) || (buttons_reprapworld_keypad & EN_REPRAPWORLD_KEYPAD_F1))
+  #else
+    #define LCD_CLICKED (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_RIGHT)
+    #define LCD_OPEN_MENU (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_MIDDLE)
+    #define LCD_MENU_BACK (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_LEFT)
+  #endif
   #elif ENABLED(NEWPANEL)
     #define LCD_CLICKED (buttons & EN_C)
   #else
