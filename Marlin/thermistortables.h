@@ -122,6 +122,46 @@
   #include "thermistortable_999.h"
 #endif
 
+// Added by LOM, taken from https://www.lesimprimantes3d.fr/forum/topic/1567-prusa-i3-zonestar-p802m/
+#if ANY_THERMISTOR_IS(501) //100k ParCan thermistor (104GT-2)
+const short temptable_501[][2] PROGMEM = {
+//Adjust By Hally
+   {1*OVERSAMPLENR, 713},
+   {14*OVERSAMPLENR, 300}, //top rating 300C
+   {16*OVERSAMPLENR, 290},
+   {19*OVERSAMPLENR, 280},
+   {23*OVERSAMPLENR, 270},
+   {27*OVERSAMPLENR, 260},
+   {31*OVERSAMPLENR, 250},
+   {37*OVERSAMPLENR, 240},
+   {47*OVERSAMPLENR, 230},
+   {57*OVERSAMPLENR, 220},
+   {68*OVERSAMPLENR, 210},
+   {84*OVERSAMPLENR, 200},
+   {100*OVERSAMPLENR, 190},
+   {128*OVERSAMPLENR, 180},
+   {155*OVERSAMPLENR, 170},
+   {189*OVERSAMPLENR, 160},
+   {230*OVERSAMPLENR, 150},
+   {278*OVERSAMPLENR, 140},
+   {336*OVERSAMPLENR, 130},
+   {402*OVERSAMPLENR, 120},
+   {476*OVERSAMPLENR, 110},
+   {554*OVERSAMPLENR, 100},
+   {635*OVERSAMPLENR, 90},
+   {713*OVERSAMPLENR, 80},
+   {784*OVERSAMPLENR, 70},
+   {846*OVERSAMPLENR, 60},
+   {897*OVERSAMPLENR, 50},
+   {937*OVERSAMPLENR, 40},
+   {966*OVERSAMPLENR, 30},
+   {986*OVERSAMPLENR, 20},
+   {1000*OVERSAMPLENR, 10},
+   {1010*OVERSAMPLENR, 0}
+};
+#endif
+
+
 #define _TT_NAME(_N) temptable_ ## _N
 #define TT_NAME(_N) _TT_NAME(_N)
 
