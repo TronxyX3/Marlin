@@ -25,6 +25,12 @@
 
 #include "Marlin.h"
 
+#ifdef ADC_KEYPAD
+  unsigned char get_ADC_keyValue(void);
+  extern unsigned int current_ADCKey_raw;
+  extern unsigned char ADCKey_count;
+#endif
+
 #if ENABLED(ULTRA_LCD)
 
   #define BUTTON_EXISTS(BN) (defined(BTN_## BN) && BTN_## BN >= 0)
@@ -64,7 +70,7 @@
   #define LCD_ALERTMESSAGEPGM(x) lcd_setalertstatuspgm(PSTR(x))
 
   #define LCD_UPDATE_INTERVAL 100
-  #define LCD_TIMEOUT_TO_STATUS 15000
+  #define LCD_TIMEOUT_TO_STATUS 30000
 
   #if ENABLED(ULTIPANEL)
 
