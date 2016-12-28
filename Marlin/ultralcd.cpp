@@ -223,6 +223,12 @@ uint16_t max_display_update_time = 0;
     #define TALL_FONT_CORRECTION 0
   #endif
 
+  //ADC_KEYPAD we dont need ENCODER_STEPS_PER_MENU_ITEM
+  #if ENABLED(ADC_KEYPAD)
+    #define ENCODER_STEPS_PER_MENU_ITEM 1
+  #endif
+
+
   /**
    * START_SCREEN_OR_MENU generates init code for a screen or menu
    *
@@ -333,10 +339,20 @@ uint16_t max_display_update_time = 0;
     } \
     _countedItems = _thisItemNr
 
+#if DISABLED(ADC_KEYPAD)
   #define END_MENU() \
     } \
     _countedItems = _thisItemNr; \
     UNUSED(_skipStatic)
+#else
+   // This is our own tracker form BACK action
+   #define END_MENU() \
+     } \
+     _countedItems = _thisItemNr; \
+     if(LCD_MENU_BACK) lcd_goto_previous_menu(); \
+     UNUSED(_skipStatic)
+#endif
+
 
   #if ENABLED(ENCODER_RATE_MULTIPLIER)
 
@@ -1704,6 +1720,7 @@ KeepDrawing:
       if (_MOVE_XY_ALLOWED) {
         MENU_ITEM(submenu, MSG_MOVE_X, lcd_move_get_x_amount);
         MENU_ITEM(submenu, MSG_MOVE_Y, lcd_move_get_y_amount);
+        MENU_ITEM(submenu, MSG_MOVE_Z, lcd_move_get_z_amount);
       }
       #if ENABLED(DELTA)
         else
@@ -2607,6 +2624,7 @@ KeepDrawing:
    *
    *       menu_action_setting_edit_int3(PSTR(MSG_SPEED), &feedrate_percentage, 10, 999)
    */
+  #if ENABLED(ADC_KEYPAD)
   #define menu_edit_type(_type, _name, _strFunc, _scale) \
     bool _menu_edit_ ## _name () { \
       ENCODER_DIRECTION_NORMAL(); \
@@ -2614,7 +2632,7 @@ KeepDrawing:
       if ((int32_t)encoderPosition > maxEditValue) encoderPosition = maxEditValue; \
       if (lcdDrawUpdate) \
         lcd_implementation_drawedit(editLabel, _strFunc(((_type)((int32_t)encoderPosition + minEditValue)) * (1.0 / _scale))); \
-      if (lcd_clicked) { \
+      if (LCD_MENU_BACK) { \
         *((_type*)editValue) = ((_type)((int32_t)encoderPosition + minEditValue)) * (1.0 / _scale); \
         lcd_goto_previous_menu(); \
       } \
@@ -2643,6 +2661,44 @@ KeepDrawing:
       callbackFunc = callback; \
     } \
     typedef void _name
+  #else
+#define menu_edit_type(_type, _name, _strFunc, _scale) \
+  bool _menu_edit_ ## _name () { \
+    ENCODER_DIRECTION_NORMAL(); \
+    if ((int32_t)encoderPosition < 0) encoderPosition = 0; \
+    if ((int32_t)encoderPosition > maxEditValue) encoderPosition = maxEditValue; \
+    if (lcdDrawUpdate) \
+      lcd_implementation_drawedit(editLabel, _strFunc(((_type)((int32_t)encoderPosition + minEditValue)) * (1.0 / _scale))); \
+    if (lcd_clicked) { \
+      *((_type*)editValue) = ((_type)((int32_t)encoderPosition + minEditValue)) * (1.0 / _scale); \
+      lcd_goto_previous_menu(); \
+    } \
+    return lcd_clicked; \
+  } \
+  void menu_edit_ ## _name () { _menu_edit_ ## _name(); } \
+  void menu_edit_callback_ ## _name () { if (_menu_edit_ ## _name ()) (*callbackFunc)(); } \
+  void _menu_action_setting_edit_ ## _name (const char * const pstr, _type* const ptr, const _type minValue, const _type maxValue) { \
+    lcd_save_previous_screen(); \
+    \
+    lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; \
+    \
+    editLabel = pstr; \
+    editValue = ptr; \
+    minEditValue = minValue * _scale; \
+    maxEditValue = maxValue * _scale - minEditValue; \
+    encoderPosition = (*ptr) * _scale - minEditValue; \
+  } \
+  void menu_action_setting_edit_ ## _name (const char * const pstr, _type * const ptr, const _type minValue, const _type maxValue) { \
+    _menu_action_setting_edit_ ## _name(pstr, ptr, minValue, maxValue); \
+    currentScreen = menu_edit_ ## _name; \
+  }\
+  void menu_action_setting_edit_callback_ ## _name (const char * const pstr, _type * const ptr, const _type minValue, const _type maxValue, const screenFunc_t callback) { \
+    _menu_action_setting_edit_ ## _name(pstr, ptr, minValue, maxValue); \
+    currentScreen = menu_edit_callback_ ## _name; \
+    callbackFunc = callback; \
+  } \
+  typedef void _name
+  #endif
 
   menu_edit_type(int, int3, itostr3, 1);
   menu_edit_type(float, float3, ftostr3, 1.0);
@@ -2802,10 +2858,12 @@ void lcd_init() {
       WRITE(BTN_ENC, HIGH);
     #endif
 
+    #if DISABLED(ADC_KEYPAD)
     #if ENABLED(REPRAPWORLD_KEYPAD)
       SET_OUTPUT(SHIFT_CLK);
       OUT_WRITE(SHIFT_LD, HIGH);
       SET_INPUT_PULLUP(SHIFT_OUT);
+    #endif
     #endif
 
     #if BUTTON_EXISTS(UP)
@@ -2930,7 +2988,12 @@ void lcd_update() {
     lcd_buttons_update();
 
     // If the action button is pressed...
+    // ADC_KEYPAD if middle button pressed..
+    #if ENABLED(ADC_KEYPAD)
+    if (LCD_OPEN_MENU) {
+    #else
     if (LCD_CLICKED) {
+    #endif
       if (!wait_for_unclick) {           // If not waiting for a debounce release:
         wait_for_unclick = true;         //  Set debounce flag to ignore continous clicks
         lcd_clicked = !wait_for_user;    //  Keep the click if not waiting for a user-click
@@ -2985,10 +3048,13 @@ void lcd_update() {
         slow_buttons = lcd_implementation_read_slow_buttons(); // buttons which take too long to read in interrupt context
       #endif
 
+      #if DISABLED(ADC_KEYPAD)
       #if ENABLED(REPRAPWORLD_KEYPAD)
         handle_reprapworld_keypad();
       #endif
+      #endif
 
+      #if DISABLED(ADC_KEYPAD)
       bool encoderPastThreshold = (abs(encoderDiff) >= ENCODER_PULSES_PER_STEP);
       if (encoderPastThreshold || lcd_clicked) {
         if (encoderPastThreshold) {
@@ -3033,6 +3099,42 @@ void lcd_update() {
           #endif
         ;
       }
+    #else //ADC_KEYPAD enabled
+        //ADC_KEYPAD Keypad up and down to encoder position
+        if(buttons_reprapworld_keypad != 0)
+        {
+
+            lcdDrawUpdate = LCDVIEW_CALL_REDRAW_NEXT;
+            return_to_status_ms = ms + LCD_TIMEOUT_TO_STATUS;
+
+            if((currentScreen == lcd_main_menu) || (currentScreen == lcd_tune_menu) || (currentScreen == lcd_prepare_menu) || (currentScreen == lcd_control_menu)\
+                    || (currentScreen == lcd_move_menu)\
+                    || (currentScreen == lcd_move_menu_10mm) ||(currentScreen == lcd_move_menu_1mm) || (currentScreen == lcd_move_menu_01mm) \
+                    || (currentScreen == lcd_control_temperature_menu) \
+                    || (currentScreen == lcd_control_motion_menu) \
+                    )
+            {
+                if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_DOWN)
+                    encoderPosition--;
+                else if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_UP)
+                    encoderPosition++;
+            }
+            else
+            {
+                if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_DOWN)
+                    encoderPosition++;
+                else if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_UP)
+                    encoderPosition--;
+            }
+
+            #ifdef ADC_KEYPAD_DEBUG
+            SERIAL_ECHOPAIR("buttons_reprapworld_keypad: ", (unsigned long)buttons_reprapworld_keypad);
+            SERIAL_ECHOPAIR("encoderPosition: ", (unsigned long)encoderPosition);
+            #endif
+
+        }
+    #endif //ADC_KEYPAD
+
     #endif // ULTIPANEL
 
     // We arrive here every ~100ms when idling often enough.
@@ -3101,6 +3203,11 @@ void lcd_update() {
       #endif
       NOLESS(max_display_update_time, millis() - ms);
     }
+
+    //ADC_KEYPAD place this inside LCD_HANDLER_CONDITION
+    #if ENABLED(ADC_KEYPAD)
+    buttons_reprapworld_keypad = 0;
+    #endif
 
     #if ENABLED(ULTIPANEL)
 
@@ -3301,7 +3408,16 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
           buttons |= slow_buttons;
         #endif
         #if ENABLED(REPRAPWORLD_KEYPAD)
+        #if DISABLED(ADC_KEYPAD)
           GET_BUTTON_STATES(buttons_reprapworld_keypad);
+        #else
+          //ADC_KEYPAD update button state if its already read
+          if(buttons_reprapworld_keypad == 0) {
+              uint8_t newbutton_reprapworld_keypad = get_ADC_keyValue();
+              if((newbutton_reprapworld_keypad >0 ) && (newbutton_reprapworld_keypad <=8))
+                  buttons_reprapworld_keypad = 1<<(newbutton_reprapworld_keypad-1);
+          }
+        #endif //ADC_KEYPAD
         #endif
       #else
         GET_BUTTON_STATES(buttons);
@@ -3346,5 +3462,58 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
   #endif
 
 #endif // ULTIPANEL
+
+    // Modified by Phisik on 17.04.2016
+    // Following  code is based on https://www.lesimprimantes3d.fr/forum/topic/2444-zonestar-p802-firmware-marlin/
+    #if ENABLED(ADC_KEYPAD)
+    #define  ADC_KEY_NUM   8
+
+    typedef struct
+    {
+      unsigned short ADCKeyValueMin;
+      unsigned short ADCKeyValueMax;
+      unsigned char  ADCKeyNo;
+    }_stADCKeypadTable_;
+
+    _stADCKeypadTable_ stADCKeyTable[ADC_KEY_NUM] =
+    {
+      //VALUE_MIN, VALUE_MAX , KEY
+      {2000,2048, BLEN_REPRAPWORLD_KEYPAD_F1+1},    //F1
+      {2000,2048, BLEN_REPRAPWORLD_KEYPAD_F2+1},    //F2
+      {2000,2048, BLEN_REPRAPWORLD_KEYPAD_F3+1},    //F3
+      {150,250,   BLEN_REPRAPWORLD_KEYPAD_LEFT+1},  //LEFT
+      {950,1100, BLEN_REPRAPWORLD_KEYPAD_RIGHT+1},  //RIGHT
+      {280,440,   BLEN_REPRAPWORLD_KEYPAD_UP+1},    //UP
+      {1340,1440, BLEN_REPRAPWORLD_KEYPAD_DOWN+1},  //DOWN
+      {580,730, BLEN_REPRAPWORLD_KEYPAD_MIDDLE+1},  //ENTER
+    };
+
+    unsigned short currentkpADCValue;
+    unsigned int   current_ADCKey_raw = 0;
+    unsigned char  ADCKey_count = 0;
+
+    unsigned char get_ADC_keyValue(void)
+    {
+      unsigned char ADCKeyNo;
+      if(ADCKey_count >= ADC_KEYPAD_LATENCY)
+      {
+        currentkpADCValue = 2*current_ADCKey_raw/ADC_KEYPAD_LATENCY;
+        current_ADCKey_raw = 0;
+        ADCKey_count = 0;
+        if(currentkpADCValue < 1600)
+        {
+          for(unsigned char i=0; i<ADC_KEY_NUM; i++)
+          {
+            if((currentkpADCValue > stADCKeyTable[i].ADCKeyValueMin) && (currentkpADCValue < stADCKeyTable[i].ADCKeyValueMax))
+            {
+              ADCKeyNo = stADCKeyTable[i].ADCKeyNo;
+              return ADCKeyNo;
+            }
+          }
+        }
+      }
+      return 0;
+    }
+    #endif  // ADC_KEYPAD
 
 #endif // ULTRA_LCD
