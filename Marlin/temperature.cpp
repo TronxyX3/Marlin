@@ -1042,6 +1042,12 @@ void Temperature::init() {
     ANALOG_SELECT(FILWIDTH_PIN);
   #endif
 
+    // Modified by Phisik
+  #if ENABLED(ADC_KEYPAD)
+    ANALOG_SELECT(ADC_KEYPAD_PIN);
+  #endif
+
+
   #if HAS_AUTO_FAN_0
     #if E0_AUTO_FAN_PIN == FAN1_PIN
       SET_OUTPUT(E0_AUTO_FAN_PIN);
