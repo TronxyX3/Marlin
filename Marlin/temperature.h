@@ -211,6 +211,11 @@ class Temperature {
       static uint8_t soft_pwm_fan[FAN_COUNT];
     #endif
 
+      // Modified by Phisik
+    #if ENABLED(ADC_KEYPAD)
+      ANALOG_SELECT(ADC_KEYPAD_PIN);
+    #endif
+
     #if ENABLED(FILAMENT_WIDTH_SENSOR)
       static int current_raw_filwidth;  //Holds measured filament diameter - one extruder only
     #endif
