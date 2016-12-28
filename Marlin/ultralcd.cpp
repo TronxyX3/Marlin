@@ -220,7 +220,8 @@ uint8_t lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; // Set when the LCD needs to 
     #define TALL_FONT_CORRECTION 0
   #endif
 
-    #if ENABLED(ADC_KEYPAD)
+    //ADC_KEYPAD we dont need ENCODER_STEPS_PER_MENU_ITEM
+	#if ENABLED(ADC_KEYPAD)
     #define ENCODER_STEPS_PER_MENU_ITEM 1
     #endif
 
@@ -1512,6 +1513,7 @@ void kill_screen(const char* lcd_msg) {
     if (_MOVE_XYZ_ALLOWED) {
       MENU_ITEM(submenu, MSG_MOVE_X, lcd_move_x);
       MENU_ITEM(submenu, MSG_MOVE_Y, lcd_move_y);
+      //ADC_KEYPAD Z movement
       MENU_ITEM(submenu, MSG_MOVE_Z, lcd_move_z);
     }
 
@@ -2474,6 +2476,7 @@ void kill_screen(const char* lcd_msg) {
     } \
     typedef void _name
 #else
+//ADC_KEYPAD press back button when edit parameter to go to the previous menu (changed lcd_clicked to LCD_MENU_BACK)
 #define menu_edit_type(_type, _name, _strFunc, _scale) \
   bool _menu_edit_ ## _name () { \
     ENCODER_DIRECTION_NORMAL(); \
@@ -2637,6 +2640,7 @@ void lcd_init() {
       WRITE(BTN_ENC, HIGH);
     #endif
 
+	//ADC_KEYPAD disable shift register normaly used by REPRAPWORLD Keypad
     #if ENABLED(REPRAPWORLD_KEYPAD) && DISABLED(ADC_KEYPAD)
       SET_OUTPUT(SHIFT_CLK);
       OUT_WRITE(SHIFT_LD, HIGH);
@@ -2765,6 +2769,7 @@ void lcd_update() {
     lcd_buttons_update();
 
     // If the action button is pressed...
+	// ADC_KEYPAD if middle button pressed..
     #if DISABLED(ADC_KEYPAD)
     if (LCD_CLICKED) {
     #else
@@ -2894,6 +2899,7 @@ void lcd_update() {
         lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
       }
     #else
+		//ADC_KEYPAD Keypad up and down to encoder position
         if(buttons_reprapworld_keypad != 0)
         {
 
@@ -2997,6 +3003,7 @@ void lcd_update() {
         #endif
       }
 
+      //ADC_KEYPAD place this inside LCD_HANDLER_CONDITION
       #if ENABLED(ADC_KEYPAD)
         buttons_reprapworld_keypad = 0;
       #endif
@@ -3204,6 +3211,7 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
          #if DISABLED(ADC_KEYPAD)
           GET_BUTTON_STATES(buttons_reprapworld_keypad);
          #else
+          //ADC_KEYPAD update button state if its already read
           if(buttons_reprapworld_keypad == 0) {
               uint8_t newbutton_reprapworld_keypad = get_ADC_keyValue();
               if((newbutton_reprapworld_keypad >0 ) && (newbutton_reprapworld_keypad <=8))
