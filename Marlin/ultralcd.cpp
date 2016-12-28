@@ -334,10 +334,19 @@ uint8_t lcdDrawUpdate = LCDVIEW_CLEAR_CALL_REDRAW; // Set when the LCD needs to 
     } \
     _countedItems = _thisItemNr
 
+#if DISABLED(ADC_KEYPAD)
   #define END_MENU() \
     } \
     _countedItems = _thisItemNr; \
     UNUSED(_skipStatic)
+#else
+   // This is our own tracker form BACK action
+   #define END_MENU() \
+     } \
+     _countedItems = _thisItemNr; \
+     if(LCD_MENU_BACK) lcd_goto_previous_menu(); \
+     UNUSED(_skipStatic)
+#endif
 
   #if ENABLED(ENCODER_RATE_MULTIPLIER)
 
