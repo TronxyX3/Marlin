@@ -116,6 +116,9 @@ static void menu_action_setting_edit_callback_long5(const char* pstr, unsigned l
   #endif
 #endif
 
+#ifdef ADC_KEYPAD
+#define ENCODER_STEPS_PER_MENU_ITEM 1
+#endif
 
 /* Helper macros for menus */
 #define START_MENU() do { \
@@ -243,7 +246,11 @@ static void lcd_status_screen()
     }
 #ifdef ULTIPANEL
 
+#ifdef ADC_KEYPAD
+    bool current_click = LCD_OPEN_MENU;
+#else
     bool current_click = LCD_CLICKED;
+#endif
 
     if (ignore_click) {
         if (wait_for_unclick) {
@@ -407,7 +414,12 @@ void lcd_set_home_offsets()
       lcdDrawUpdate = 1;
     }
     if (lcdDrawUpdate) lcd_implementation_drawedit(msg, "");
+    #ifdef ADC_KEYPAD
+    if (LCD_MENU_BACK) lcd_goto_menu(lcd_tune_menu);
+    #else
     if (LCD_CLICKED) lcd_goto_menu(lcd_tune_menu);
+    #endif
+
   }
   static void lcd_babystep_x() { _lcd_babystep(X_AXIS, PSTR(MSG_BABYSTEPPING_X)); }
   static void lcd_babystep_y() { _lcd_babystep(Y_AXIS, PSTR(MSG_BABYSTEPPING_Y)); }
@@ -671,7 +683,11 @@ static void _lcd_move(const char *name, int axis, int min, int max) {
     lcdDrawUpdate = 1;
   }
   if (lcdDrawUpdate) lcd_implementation_drawedit(name, ftostr31(current_position[axis]));
+ #ifdef ADC_KEYPAD
+  if ((LCD_MENU_BACK)) lcd_goto_menu(lcd_move_menu_axis);
+ #else
   if (LCD_CLICKED) lcd_goto_menu(lcd_move_menu_axis);
+ #endif
 }
 static void lcd_move_x() { _lcd_move(PSTR("X"), X_AXIS, X_MIN_POS, X_MAX_POS); }
 static void lcd_move_y() { _lcd_move(PSTR("Y"), Y_AXIS, Y_MIN_POS, Y_MAX_POS); }
@@ -695,7 +711,11 @@ static void lcd_move_e()
     {
         lcd_implementation_drawedit(PSTR("Extruder"), ftostr31(current_position[E_AXIS]));
     }
+    #ifdef ADC_KEYPAD
+    if (LCD_MENU_BACK) lcd_goto_menu(lcd_move_menu_axis);
+    #else
     if (LCD_CLICKED) lcd_goto_menu(lcd_move_menu_axis);
+    #endif
 }
 
 static void lcd_move_menu_axis()
@@ -911,7 +931,11 @@ static void lcd_set_contrast()
     {
         lcd_implementation_drawedit(PSTR(MSG_CONTRAST), itostr2(lcd_contrast));
     }
+    #ifdef ADC_KEYPAD
+    if (LCD_MENU_BACK) lcd_goto_menu(lcd_control_menu);
+    #else
     if (LCD_CLICKED) lcd_goto_menu(lcd_control_menu);
+    #endif
 }
 #endif
 
@@ -989,6 +1013,54 @@ void lcd_sdcard_menu()
     END_MENU();
 }
 
+#ifdef ADC_KEYPAD
+#define menu_edit_type(_type, _name, _strFunc, scale) \
+    void menu_edit_ ## _name () \
+    { \
+        if ((int32_t)encoderPosition < 0) encoderPosition = 0; \
+        if ((int32_t)encoderPosition > maxEditValue) encoderPosition = maxEditValue; \
+        if (lcdDrawUpdate) \
+            lcd_implementation_drawedit(editLabel, _strFunc(((_type)((int32_t)encoderPosition + minEditValue)) / scale)); \
+        if (LCD_MENU_BACK) \
+        { \
+            *((_type*)editValue) = ((_type)((int32_t)encoderPosition + minEditValue)) / scale; \
+            lcd_goto_menu(prevMenu, prevEncoderPosition); \
+        } \
+    } \
+    void menu_edit_callback_ ## _name () { \
+        menu_edit_ ## _name (); \
+        if (LCD_MENU_BACK) (*callbackFunc)(); \
+    } \
+    static void menu_action_setting_edit_ ## _name (const char* pstr, _type* ptr, _type minValue, _type maxValue) \
+    { \
+        prevMenu = currentMenu; \
+        prevEncoderPosition = encoderPosition; \
+         \
+        lcdDrawUpdate = 2; \
+        currentMenu = menu_edit_ ## _name; \
+         \
+        editLabel = pstr; \
+        editValue = ptr; \
+        minEditValue = minValue * scale; \
+        maxEditValue = maxValue * scale - minEditValue; \
+        encoderPosition = (*ptr) * scale - minEditValue; \
+    }\
+    static void menu_action_setting_edit_callback_ ## _name (const char* pstr, _type* ptr, _type minValue, _type maxValue, menuFunc_t callback) \
+    { \
+        prevMenu = currentMenu; \
+        prevEncoderPosition = encoderPosition; \
+         \
+        lcdDrawUpdate = 2; \
+        currentMenu = menu_edit_callback_ ## _name; \
+         \
+        editLabel = pstr; \
+        editValue = ptr; \
+        minEditValue = minValue * scale; \
+        maxEditValue = maxValue * scale - minEditValue; \
+        encoderPosition = (*ptr) * scale - minEditValue; \
+        callbackFunc = callback;\
+    }
+#else
 #define menu_edit_type(_type, _name, _strFunc, scale) \
     void menu_edit_ ## _name () \
     { \
@@ -1035,6 +1107,7 @@ void lcd_sdcard_menu()
         encoderPosition = (*ptr) * scale - minEditValue; \
         callbackFunc = callback;\
     }
+#endif
 menu_edit_type(int, int3, itostr3, 1)
 menu_edit_type(float, float3, ftostr3, 1)
 menu_edit_type(float, float32, ftostr32, 100)
@@ -1127,6 +1200,7 @@ void lcd_init()
     lcd_implementation_init();
 
 #ifdef NEWPANEL
+    #ifndef ADC_KEYPAD
     SET_INPUT(BTN_EN1);
     SET_INPUT(BTN_EN2);
     WRITE(BTN_EN1,HIGH);
@@ -1141,6 +1215,7 @@ void lcd_init()
     pinMode(SHIFT_OUT,INPUT);
     WRITE(SHIFT_OUT,HIGH);
     WRITE(SHIFT_LD,HIGH);
+  #endif
   #endif
 #else  // Not NEWPANEL
   #ifdef SR_LCD_2W_NL // Non latching 2 wire shift register
@@ -1212,6 +1287,7 @@ void lcd_update()
     if (lcd_next_update_millis < millis())
     {
 #ifdef ULTIPANEL
+        #ifndef ADC_KEYPAD //if adc keypad disabled
 		#ifdef REPRAPWORLD_KEYPAD
         	if (REPRAPWORLD_KEYPAD_MOVE_Z_UP) {
         		reprapworld_keypad_move_z_up();
@@ -1235,6 +1311,41 @@ void lcd_update()
         		reprapworld_keypad_move_home();
         	}
 		#endif
+        #endif //if adc keypad disabled
+
+        #ifdef ADC_KEYPAD //if adc keypad handle our own encoder
+        if(buttons_reprapworld_keypad != 0)
+        {
+//            lcd_implementation_feedback_ShortBeep();
+            lcdDrawUpdate = 1;
+            timeoutToStatus = millis() + LCD_TIMEOUT_TO_STATUS;
+            if((currentMenu == lcd_main_menu) || (currentMenu == lcd_tune_menu) || (currentMenu == lcd_prepare_menu) || (currentMenu == lcd_control_menu)\
+                || (currentMenu == lcd_sdcard_menu) || (currentMenu == lcd_move_menu) || (currentMenu == lcd_move_menu_axis) \
+                || (currentMenu == lcd_move_menu_10mm) ||(currentMenu == lcd_move_menu_1mm) || (currentMenu == lcd_move_menu_01mm) \
+                || (currentMenu == lcd_control_temperature_menu) || (currentMenu == lcd_control_temperature_preheat_pla_settings_menu) || (currentMenu == lcd_control_temperature_preheat_abs_settings_menu)\
+                || (currentMenu == lcd_preheat_pla_menu) || (currentMenu == lcd_preheat_abs_menu) || (currentMenu == lcd_control_motion_menu) \
+                )
+            {
+                if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_DOWN)
+                    encoderPosition--;
+                else if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_UP)
+                    encoderPosition++;
+            }
+            else
+            {
+                if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_DOWN)
+                    encoderPosition++;
+                else if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_UP)
+                    encoderPosition--;
+            }
+            #ifdef ADC_KEYPAD_DEBUG
+            SERIAL_PROTOCOLPGM("buttons_reprapworld_keypad = ");
+            SERIAL_PROTOCOLLN((unsigned long)buttons_reprapworld_keypad);
+            SERIAL_PROTOCOLPGM("encoderPosition = ");
+            SERIAL_PROTOCOLLN((unsigned long)encoderPosition);
+            #endif
+        }
+        #else //if adc keypad disabled
         if (abs(encoderDiff) >= ENCODER_PULSES_PER_STEP)
         {
             lcdDrawUpdate = 1;
@@ -1244,6 +1355,7 @@ void lcd_update()
         }
         if (LCD_CLICKED)
             timeoutToStatus = millis() + LCD_TIMEOUT_TO_STATUS;
+        #endif //end adc keypad handler
 #endif//ULTIPANEL
 
 #ifdef DOGLCD        // Changes due to different driver architecture of the DOGM display
@@ -1261,6 +1373,10 @@ void lcd_update()
         } while( u8g.nextPage() );
 #else
         (*currentMenu)();
+#endif
+
+#ifdef ADC_KEYPAD
+        buttons_reprapworld_keypad = 0;
 #endif
 
 #ifdef LCD_HAS_STATUS_INDICATORS
@@ -1346,20 +1462,35 @@ void lcd_setcontrast(uint8_t value)
 void lcd_buttons_update()
 {
 #ifdef NEWPANEL
+    #ifndef REPRAPWORLD_KEYPAD
     uint8_t newbutton=0;
     if(READ(BTN_EN1)==0)  newbutton|=EN_A;
     if(READ(BTN_EN2)==0)  newbutton|=EN_B;
+    #endif
   #if BTN_ENC > 0
     if((blocking_enc<millis()) && (READ(BTN_ENC)==0))
         newbutton |= EN_C;
   #endif
+    #ifndef REPRAPWORLD_KEYPAD
     buttons = newbutton;
     #ifdef LCD_HAS_SLOW_BUTTONS
     buttons |= slow_buttons;
     #endif
+    #endif
     #ifdef REPRAPWORLD_KEYPAD
       // for the reprapworld_keypad
       uint8_t newbutton_reprapworld_keypad=0;
+      #ifndef ADC_KEYPAD
+      buttons = 0;
+      #endif
+      #ifdef ADC_KEYPAD
+      if(buttons_reprapworld_keypad == 0)
+      {
+        newbutton_reprapworld_keypad = get_ADC_keyValue();
+        if((newbutton_reprapworld_keypad >0 ) && (newbutton_reprapworld_keypad <=8))
+            buttons_reprapworld_keypad = 1<<(newbutton_reprapworld_keypad-1);
+      }
+      #else
       WRITE(SHIFT_LD,LOW);
       WRITE(SHIFT_LD,HIGH);
       for(int8_t i=0;i<8;i++) {
@@ -1370,7 +1501,8 @@ void lcd_buttons_update()
           WRITE(SHIFT_CLK,LOW);
       }
       buttons_reprapworld_keypad=~newbutton_reprapworld_keypad; //invert it, because a pressed switch produces a logical 0
-	#endif
+      #endif
+#endif
 #else   //read it from the shift register
     uint8_t newbutton=0;
     WRITE(SHIFT_LD,LOW);
@@ -1388,6 +1520,7 @@ void lcd_buttons_update()
 #endif//!NEWPANEL
 
     //manage encoder rotation
+#ifndef ADC_KEYPAD
     uint8_t enc=0;
     if (buttons & EN_A) enc |= B01;
     if (buttons & EN_B) enc |= B10;
@@ -1422,6 +1555,7 @@ void lcd_buttons_update()
         }
     }
     lastEncoderBits = enc;
+#endif
 }
 
 bool lcd_detected(void)
@@ -1719,5 +1853,51 @@ void copy_and_scalePID_d()
   updatePID();
 #endif
 }
+#ifdef ADC_KEYPAD
+#define	ADC_KEY_NUM		8
+typedef struct
+{
+    unsigned short ADCKeyValueMin;
+    unsigned short ADCKeyValueMax;
+    unsigned char  ADCKeyNo;
+}_stADCKeypadTable_;
+_stADCKeypadTable_ stADCKeyTable[ADC_KEY_NUM] =
+{
+    //VALUE_MIN, VALUE_MAX , KEY
+    {2000,2048, BLEN_REPRAPWORLD_KEYPAD_F1+1},		//F1
+    {2000,2048, BLEN_REPRAPWORLD_KEYPAD_F2+1},		//F2
+    {2000,2048, BLEN_REPRAPWORLD_KEYPAD_F3+1},		//F3
+    {150,250, 	BLEN_REPRAPWORLD_KEYPAD_LEFT+1},	//LEFT
+    {950,1100, BLEN_REPRAPWORLD_KEYPAD_RIGHT+1},	//RIGHT
+    {280,440, 	BLEN_REPRAPWORLD_KEYPAD_UP+1},		//UP
+    {1340,1440, BLEN_REPRAPWORLD_KEYPAD_DOWN+1},	//DOWN
+    {580,730, BLEN_REPRAPWORLD_KEYPAD_MIDDLE+1},	//ENTER
+};
+
+unsigned short currentkpADCValue;
+unsigned char get_ADC_keyValue(void)
+{
+    unsigned char ADCKeyNo;
+    if(ADCKey_count >= 16)
+    {
+        currentkpADCValue = (current_ADCKey_raw/8);
+        current_ADCKey_raw = 0;
+        ADCKey_count = 0;
+        if(currentkpADCValue < 1600)
+        {
+            for(unsigned char i=0; i<ADC_KEY_NUM; i++)
+            {
+                if((currentkpADCValue > stADCKeyTable[i].ADCKeyValueMin) && (currentkpADCValue < stADCKeyTable[i].ADCKeyValueMax))
+                {
+                    ADCKeyNo = stADCKeyTable[i].ADCKeyNo;
+                    return ADCKeyNo;
+                }
+            }
+        }
+    }
+    return 0;
+}
+#endif
+
 
 #endif //ULTRA_LCD

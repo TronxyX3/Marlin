@@ -13,6 +13,9 @@
   void lcd_reset_alert_level();
   bool lcd_detected(void);
 
+#ifdef ADC_KEYPAD
+  unsigned char get_ADC_keyValue(void);
+#endif
 #ifdef DOGLCD
   extern int lcd_contrast;
   void lcd_setcontrast(uint8_t value);
@@ -28,9 +31,11 @@
 
   #ifdef ULTIPANEL
   void lcd_buttons_update();
-  extern volatile uint8_t buttons;  //the last checked buttons in a bit array.
   #ifdef REPRAPWORLD_KEYPAD
     extern volatile uint8_t buttons_reprapworld_keypad; // to store the keypad shift register values
+    extern volatile uint16_t buttons;  //the last checked buttons in a bit array.
+  #else
+    extern volatile uint8_t buttons;  //the last checked buttons in a bit array.
   #endif
   #else
   FORCE_INLINE void lcd_buttons_update() {}
