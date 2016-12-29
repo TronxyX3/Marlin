@@ -1206,7 +1206,7 @@
 #endif
 
 #ifdef MELZI
- #define LED_PIN            27 /* On some broken versions of the Sanguino libraries the pin definitions are wrong, which then needs LED_PIN as pin 28. But you better upgrade your Sanguino libraries! See #368. */
+ #define LED_PIN            -1 /* On some broken versions of the Sanguino libraries the pin definitions are wrong, which then needs LED_PIN as pin 28. But you better upgrade your Sanguino libraries! See #368. */
  #define FAN_PIN            4 // Works for Panelolu2 too
 #endif
 
@@ -1292,16 +1292,16 @@
        #define LCD_SCREEN_ROT_180
          // #define LCD_SCREEN_ROT_270
        #else // standard Hitachi LCD controller
-       #define LCD_PINS_RS        4
-       #define LCD_PINS_ENABLE    17
-       #define LCD_PINS_D4        30
-       #define LCD_PINS_D5        29
-       #define LCD_PINS_D6        28
-       #define LCD_PINS_D7        27
+       #define LCD_PINS_RS        28
+       #define LCD_PINS_ENABLE    29
+       #define LCD_PINS_D4        10
+       #define LCD_PINS_D5        11
+       #define LCD_PINS_D6        16
+       #define LCD_PINS_D7        17
      #endif
      //The encoder and click button
-     #define BTN_EN1 11
-     #define BTN_EN2 10
+     #define BTN_EN1 -1
+     #define BTN_EN2 -1
      #ifdef LCD_I2C_PANELOLU2
        #ifdef MELZI
          #define BTN_ENC 29 //the click switch
@@ -1310,10 +1310,21 @@
          #define BTN_ENC 30 //the click switch
        #endif
      #else
-       #define BTN_ENC 16  //the click switch
+       #define BTN_ENC -1  //the click switch
      #endif //Panelolu2
      //not connected to a pin
      #define SDCARDDETECT -1
+     #ifdef REPRAPWORLD_KEYPAD
+       #ifdef ADC_KEYPAD
+       #define PINS_ADC_KEY		1		//A1
+       #endif
+       #define BTN_EN1			-1 // encoder dmmy
+       #define BTN_EN2			-1 // encoder dmmy
+       #define BTN_ENC			-1 // enter button dmmy
+       #define SHIFT_OUT 		-1 // shift register dmmy
+       #define SHIFT_CLK 		-1 // shift register dmmy
+       #define SHIFT_LD			-1 // shift register dmmy
+     #endif
 
    #endif //Newpanel
  #endif //Ultipanel
