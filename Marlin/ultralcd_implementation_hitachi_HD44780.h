@@ -83,7 +83,11 @@ extern volatile uint16_t buttons;  //an extended version of the last checked but
     #define BLEN_REPRAPWORLD_KEYPAD_DOWN 6
     #define BLEN_REPRAPWORLD_KEYPAD_LEFT 7
     
+    #ifdef ADC_KEYPAD
+    #define REPRAPWORLD_BTN_OFFSET 			0
+    #else
     #define REPRAPWORLD_BTN_OFFSET 3 // bit offset into buttons for shift register values
+    #endif
 
     #define EN_REPRAPWORLD_KEYPAD_F3 (1<<(BLEN_REPRAPWORLD_KEYPAD_F3+REPRAPWORLD_BTN_OFFSET))
     #define EN_REPRAPWORLD_KEYPAD_F2 (1<<(BLEN_REPRAPWORLD_KEYPAD_F2+REPRAPWORLD_BTN_OFFSET))
@@ -94,7 +98,14 @@ extern volatile uint16_t buttons;  //an extended version of the last checked but
     #define EN_REPRAPWORLD_KEYPAD_DOWN (1<<(BLEN_REPRAPWORLD_KEYPAD_DOWN+REPRAPWORLD_BTN_OFFSET))
     #define EN_REPRAPWORLD_KEYPAD_LEFT (1<<(BLEN_REPRAPWORLD_KEYPAD_LEFT+REPRAPWORLD_BTN_OFFSET))
 
+    #ifdef ADC_KEYPAD
+    #define LCD_CLICKED (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_RIGHT)
+    #define	LCD_OPEN_MENU (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_MIDDLE)
+    #define	LCD_MENU_BACK (buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_LEFT)
+    #else
     #define LCD_CLICKED ((buttons&EN_C) || (buttons&EN_REPRAPWORLD_KEYPAD_F1))
+    #endif
+
     #define REPRAPWORLD_KEYPAD_MOVE_Y_DOWN (buttons&EN_REPRAPWORLD_KEYPAD_DOWN)
     #define REPRAPWORLD_KEYPAD_MOVE_Y_UP (buttons&EN_REPRAPWORLD_KEYPAD_UP)
     #define REPRAPWORLD_KEYPAD_MOVE_HOME (buttons&EN_REPRAPWORLD_KEYPAD_MIDDLE)
