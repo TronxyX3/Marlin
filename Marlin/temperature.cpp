@@ -46,6 +46,12 @@ int current_temperature_raw[EXTRUDERS] = { 0 };
 float current_temperature[EXTRUDERS] = { 0.0 };
 int current_temperature_bed_raw = 0;
 float current_temperature_bed = 0.0;
+
+#ifdef ADC_KEYPAD
+unsigned int current_ADCKey_raw = 0;
+unsigned char ADCKey_count = 0;
+#endif
+
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   int redundant_temperature_raw = 0;
   float redundant_temperature = 0.0;
@@ -1221,7 +1227,12 @@ ISR(TIMER0_COMPB_vect)
   static unsigned long raw_temp_1_value = 0;
   static unsigned long raw_temp_2_value = 0;
   static unsigned long raw_temp_bed_value = 0;
+#ifdef ADC_KEYPAD
+  static unsigned int raw_ADCKey_value = 0;
   static unsigned char temp_state = 10;
+#else
+  static unsigned char temp_state = 10;
+#endif
   static unsigned char pwm_count = (1 << SOFT_PWM_SCALE);
   static unsigned char soft_pwm_0;
 #ifdef SLOW_PWM_HEATERS
@@ -1540,7 +1551,10 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_0_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+      #ifndef ADC_KEYPAD
       lcd_buttons_update();
+      #endif
+
       temp_state = 1;
       break;
     case 1: // Measure TEMP_0
@@ -1562,7 +1576,10 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_BED_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+      #ifndef ADC_KEYPAD
       lcd_buttons_update();
+      #endif
+
       temp_state = 3;
       break;
     case 3: // Measure TEMP_BED
@@ -1581,7 +1598,10 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_1_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+      #ifndef ADC_KEYPAD
       lcd_buttons_update();
+      #endif
+
       temp_state = 5;
       break;
     case 5: // Measure TEMP_1
@@ -1600,9 +1620,57 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_2_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+      #ifndef ADC_KEYPAD
       lcd_buttons_update();
+      #endif
       temp_state = 7;
       break;
+
+#ifdef ADC_KEYPAD
+  case 7: // Measure TEMP_2
+      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
+        raw_temp_2_value += ADC;
+      #endif
+      temp_state = 8;
+      break;
+  case 8: // Prepare ADC_KEY
+   #if defined(PINS_ADC_KEY) && (PINS_ADC_KEY > -1)
+      #if PINS_ADC_KEY > 7
+        ADCSRB = 1<<MUX5;
+      #else
+        ADCSRB = 0;
+      #endif
+      ADMUX = ((1 << REFS0) | (PINS_ADC_KEY & 0x07));
+      ADCSRA |= 1<<ADSC; // Start conversion
+    #endif
+    temp_state = 9;
+    break;
+  case 9: // Measure ADC_KEY
+      if(ADCKey_count < 16)
+      {
+        #if defined(PINS_ADC_KEY) && (PINS_ADC_KEY > -1)
+            raw_ADCKey_value = ADC;
+        #endif
+            if(raw_ADCKey_value > 900)
+            {
+                //ADC Key release
+                ADCKey_count = 0;
+                current_ADCKey_raw = 0;
+            }
+            else
+            {
+                current_ADCKey_raw += raw_ADCKey_value;
+                ADCKey_count++;
+            }
+      }
+  temp_state = 0;
+     temp_count++;
+     break;
+  case 10: //Startup, delay initial temp reading a tiny bit so the hardware can settle.
+    temp_state = 0;
+    break;
+
+#else
     case 7: // Measure TEMP_2
       #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
         raw_temp_2_value += ADC;
@@ -1620,7 +1688,7 @@ ISR(TIMER0_COMPB_vect)
       ADMUX = ((1 << REFS0) | (FILWIDTH_PIN & 0x07)); 
       ADCSRA |= 1<<ADSC; // Start conversion 
      #endif 
-     lcd_buttons_update();       
+     lcd_buttons_update();
      temp_state = 9; 
      break; 
     case 9:   //Measure FILWIDTH 
@@ -1636,12 +1704,13 @@ ISR(TIMER0_COMPB_vect)
      temp_state = 0;   
       
      temp_count++;
-     break;      
-      
-      
+     break;
+
+
     case 10: //Startup, delay initial temp reading a tiny bit so the hardware can settle.
       temp_state = 0;
       break;
+#endif
 //    default:
 //      SERIAL_ERROR_START;
 //      SERIAL_ERRORLNPGM("Temp measurement error!");
