@@ -154,6 +154,20 @@ static void menu_action_setting_edit_callback_long5(const char* pstr, unsigned l
     if ((uint8_t)(encoderPosition / ENCODER_STEPS_PER_MENU_ITEM) >= currentMenuViewOffset + LCD_HEIGHT) { currentMenuViewOffset = (encoderPosition / ENCODER_STEPS_PER_MENU_ITEM) - LCD_HEIGHT + 1; lcdDrawUpdate = 1; _lineNr = currentMenuViewOffset - 1; _drawLineNr = -1; } \
     } } while(0)
 
+#ifdef ADC_KEYPAD
+void Back_menu_Process(menuFunc_t data)
+{
+    if(LCD_MENU_BACK)
+    {
+        menu_action_back(data);
+    }
+}
+#define	EXIT_MENU(args) Back_menu_Process(args)
+#else
+#define	EXIT_MENU(args)
+#endif
+
+
 /** Used variables to keep track of the menu */
 #ifndef REPRAPWORLD_KEYPAD
 volatile uint8_t buttons;//Contains the bits of the currently pressed buttons.
@@ -377,6 +391,7 @@ static void lcd_main_menu()
     }
 #endif
     END_MENU();
+    EXIT_MENU(lcd_status_screen);
 }
 
 #ifdef SDSUPPORT
@@ -465,6 +480,7 @@ static void lcd_tune_menu()
      MENU_ITEM(gcode, MSG_FILAMENTCHANGE, PSTR("M600"));
 #endif
     END_MENU();
+    EXIT_MENU(lcd_main_menu);
 }
 
 void lcd_preheat_pla0()
@@ -583,6 +599,7 @@ static void lcd_preheat_pla_menu()
     MENU_ITEM(function, MSG_PREHEAT_PLA_BEDONLY, lcd_preheat_pla_bedonly);
 #endif
     END_MENU();
+    EXIT_MENU(lcd_prepare_menu);
 }
 
 static void lcd_preheat_abs_menu()
@@ -603,6 +620,7 @@ static void lcd_preheat_abs_menu()
     MENU_ITEM(function, MSG_PREHEAT_ABS_BEDONLY, lcd_preheat_abs_bedonly);
 #endif
     END_MENU();
+    EXIT_MENU(lcd_prepare_menu);
 }
 
 void lcd_cooldown()
@@ -648,6 +666,7 @@ static void lcd_prepare_menu()
 #endif
     MENU_ITEM(submenu, MSG_MOVE_AXIS, lcd_move_menu);
     END_MENU();
+    EXIT_MENU(lcd_main_menu);
 }
 
 #ifdef DELTA_CALIBRATION_MENU
@@ -730,6 +749,7 @@ static void lcd_move_menu_axis()
         MENU_ITEM(submenu, MSG_MOVE_E, lcd_move_e);
     }
     END_MENU();
+    EXIT_MENU(lcd_move_menu);
 }
 
 static void lcd_move_menu_10mm()
@@ -757,6 +777,7 @@ static void lcd_move_menu()
     MENU_ITEM(submenu, MSG_MOVE_01MM, lcd_move_menu_01mm);
     //TODO:X,Y,Z,E
     END_MENU();
+    EXIT_MENU(lcd_prepare_menu);
 }
 
 static void lcd_control_menu()
@@ -780,6 +801,7 @@ static void lcd_control_menu()
 #endif
     MENU_ITEM(function, MSG_RESTORE_FAILSAFE, Config_ResetDefault);
     END_MENU();
+    EXIT_MENU(lcd_main_menu);
 }
 
 static void lcd_control_temperature_menu()
@@ -823,6 +845,7 @@ static void lcd_control_temperature_menu()
     MENU_ITEM(submenu, MSG_PREHEAT_PLA_SETTINGS, lcd_control_temperature_preheat_pla_settings_menu);
     MENU_ITEM(submenu, MSG_PREHEAT_ABS_SETTINGS, lcd_control_temperature_preheat_abs_settings_menu);
     END_MENU();
+    EXIT_MENU(lcd_control_menu);
 }
 
 static void lcd_control_temperature_preheat_pla_settings_menu()
@@ -840,6 +863,7 @@ static void lcd_control_temperature_preheat_pla_settings_menu()
     MENU_ITEM(function, MSG_STORE_EPROM, Config_StoreSettings);
 #endif
     END_MENU();
+    EXIT_MENU(lcd_control_temperature_menu);
 }
 
 static void lcd_control_temperature_preheat_abs_settings_menu()
@@ -857,6 +881,7 @@ static void lcd_control_temperature_preheat_abs_settings_menu()
     MENU_ITEM(function, MSG_STORE_EPROM, Config_StoreSettings);
 #endif
     END_MENU();
+    EXIT_MENU(lcd_control_temperature_menu);
 }
 
 static void lcd_control_motion_menu()
@@ -893,6 +918,7 @@ static void lcd_control_motion_menu()
     MENU_ITEM_EDIT(float74, MSG_YSCALE, &axis_scaling[Y_AXIS],0.5,2);
 #endif
     END_MENU();
+    EXIT_MENU(lcd_control_menu);
 }
 
 static void lcd_control_volumetric_menu()
@@ -957,6 +983,7 @@ static void lcd_control_retract_menu()
     #endif
     MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACT_RECOVERF, &retract_recover_feedrate, 1, 999);
     END_MENU();
+    EXIT_MENU(lcd_control_menu);
 }
 
 #endif //FWRETRACT
@@ -1011,6 +1038,7 @@ void lcd_sdcard_menu()
         }
     }
     END_MENU();
+    EXIT_MENU(lcd_main_menu);
 }
 
 #ifdef ADC_KEYPAD
