@@ -2920,6 +2920,7 @@ void lcd_update() {
                     || (currentScreen == lcd_move_menu_10mm) ||(currentScreen == lcd_move_menu_1mm) || (currentScreen == lcd_move_menu_01mm) \
                     || (currentScreen == lcd_control_temperature_menu) \
                     || (currentScreen == lcd_control_motion_menu) \
+                    || (currentScreen == lcd_sdcard_menu) \
                     )
             {
                 if(buttons_reprapworld_keypad&EN_REPRAPWORLD_KEYPAD_DOWN)
